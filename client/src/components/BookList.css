@@ -1,0 +1,36 @@
+.popup-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999;
+}
+
+.popup-content {
+  background: white;
+  padding: 20px;
+  border-radius: 10px;
+  min-width: 320px;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+.book-item {
+  outline: 1px solid #e0e0e0b4;
+  margin: 0px;
+  padding: 10px;
+  border-radius: 3px;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.book-item:hover {
+  border: none;
+  box-shadow: 6px 5px 8px rgba(0, 0, 0, 0.1);
+  background-color: #f7f7f7;
+}
