@@ -43,6 +43,13 @@ export default function BookList({
     localStorage.setItem("currentPage", currentPage);
   }, [currentPage]);
 
+  useEffect(() => {
+    const totalPages = Math.ceil(books.length / itemsPerPage);
+    if (currentPage > totalPages && totalPages > 0) {
+      setCurrentPage(totalPages);
+    }
+  }, [books, currentPage, itemsPerPage]);
+
   const openEditPopup = (book) => {
     setEditingBook(book);
     setEditForm({

@@ -80,7 +80,6 @@ function App() {
       }
     } catch (error) {
       console.error("Error loading blockchain:", error);
-      alert("Blockchain connection failed. Check console for details.");
     }
   };
 
