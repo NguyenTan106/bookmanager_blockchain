@@ -15,19 +15,28 @@ import {
   deleteCategory,
 } from "../services/categoryApi";
 
-const CategoryManagerModal = ({ show, onHide, isMulti, value, onChange }) => {
+const CategoryManagerModal = ({
+  show,
+  onHide,
+  isMulti,
+  value,
+  onChange,
+  loadBooks,
+}) => {
   const [categories, setCategories] = useState([]);
   const [newCategory, setNewCategory] = useState("");
 
   const loadCategories = async () => {
     try {
       const data = await fetchCategories();
+      // console.log(data);
       const formatted = data.map((cat) => ({
         id: cat.id,
         value: cat.name,
         label: cat.name,
       }));
       setCategories(formatted);
+      await loadBooks();
     } catch (err) {
       console.error("Lỗi lấy thể loại:", err);
     }

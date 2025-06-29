@@ -1,38 +1,29 @@
-const { computeTfIdf } = require("../services/tfidfService");
 const { contract_bookmanager } = require("../blockchain/contractBookManger");
 const { contract_bookcategory } = require("../blockchain/contractBookCategory");
 const STATUS_MAP = {
   0: "Available",
   1: "Borrowed",
 };
-const searchBooks = async (req, res) => {
-  const query = req.body.query;
-  if (!query) return res.status(400).json({ error: "Missing query" });
-
+const getCategories = async () => {
   try {
-    // 👉 Lấy số lượng sách
-    const total = await getTotalBooks();
-    // ✅ Tính TF-IDF
-    const tfidfResults = await computeTfIdf(query, total);
-    const sorted = tfidfResults.sort((a, b) => b.score - a.score);
+    const categories = await contract_bookcategory.getAllCategories(); // trả về mảng struct
 
-    res.json(sorted);
-  } catch (err) {
-    console.error("Lỗi khi tìm kiếm sách:", err);
-    res.status(500).json({ error: "Không thể tìm kiếm sách" });
-  }
-};
-
-const getTotalBooks = async () => {
-  try {
-    const books = await contract_bookmanager.getAllBooks();
-    const filtered = books.filter((b) => !b.isDeleted);
-    const categories = await contract_bookcategory.getAllCategories();
-    const categoryMap = new Map(
+    const result = new Map(
       categories
         .filter((cat) => !cat.isDeleted)
         .map((cat) => [Number(cat.id), cat.name])
     );
+    return result;
+  } catch (error) {
+    console.error("❌ Lỗi lấy thể loại:", error);
+  }
+};
+const getTotalBooks = async (req, res) => {
+  try {
+    const books = await contract_bookmanager.getAllBooks();
+    const filtered = books.filter((b) => !b.isDeleted);
+    const categories = await getCategories();
+    // Chuyển đổi BigInt về kiểu bình thường
     const formatted = filtered.map((book) => ({
       id: Number(book.id),
       title: book.title,
@@ -41,11 +32,11 @@ const getTotalBooks = async () => {
       description: book.description,
       category: book.categoryIds
         .map((id) => {
-          const name = categoryMap.get(Number(id));
+          const name = categories.get(Number(id));
           if (!name) return null;
           return { id: Number(id), name };
         })
-        .filter(Boolean),
+        .filter(Boolean), // loại undefined nếu có
       ipfsHash: book.ipfsHash,
       coverImageHash: book.coverImageHash,
       status: STATUS_MAP[Number(book.status)],
@@ -60,10 +51,11 @@ const getTotalBooks = async () => {
       isDeleted: book.isDeleted,
       performedBy: book.performedBy,
     }));
-    return formatted;
+    res.json(formatted);
   } catch (err) {
     console.error("❌ Lỗi lấy sách từ smart contract:", err);
+    res.status(500).json({ error: "Không thể lấy danh sách sách" });
   }
 };
 
-module.exports = { getTotalBooks, searchBooks };
+module.exports = { getTotalBooks };

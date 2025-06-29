@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Container } from "react-bootstrap";
+import { Container, Badge } from "react-bootstrap";
 import Button from "react-bootstrap/Button";
 import BookAuthor from "./BookAuthor";
 import Web3 from "web3";
@@ -105,11 +105,12 @@ export default function BookDetailPopup({
         </p>
         <p>
           <strong>Loại sách:</strong>{" "}
-          {Object.keys(categoryMap).length === 0
-            ? "Đang tải..."
-            : book.categoryIds
-                .map((id) => categoryMap[id] || `#${id}`)
-                .join(", ")}
+          {book.category?.map((cat, idx) => (
+            <Badge bg="secondary" className="me-1" key={idx}>
+              {cat.name}
+            </Badge>
+          ))}
+          {/* {book.category.map((cat) => cat.name).join(", ")} */}
         </p>
         <p>
           <strong>IPFS:</strong> {book.ipfsHash}
@@ -127,20 +128,38 @@ export default function BookDetailPopup({
           </u>
         </p>
         <p>
-          <strong>Trạng thái:</strong>{" "}
-          {isAdmin ? (
-            book.status == 0 ? (
-              "Available"
-            ) : (
-              "Borrowed"
-            )
-          ) : book.hasBought ? (
-            <span className="text-success">Đã mua ✅</span>
-          ) : hasBorrowed(book) ? (
-            "Borrowed"
-          ) : (
-            "Available"
-          )}
+          <div className="mb-2">
+            <strong>Trạng thái:</strong>{" "}
+            {(() => {
+              let label = "Unknown";
+              let variant = "secondary";
+
+              if (isAdmin) {
+                if (book.status === "Available" || book.status === 0) {
+                  label = "Available";
+                  variant = "success";
+                } else {
+                  label = "Borrowed";
+                  variant = "warning";
+                }
+              } else if (book.hasBought) {
+                label = "Đã mua";
+                variant = "info";
+              } else if (hasBorrowed(book)) {
+                label = "Borrowed";
+                variant = "warning";
+              } else {
+                label = "Available";
+                variant = "success";
+              }
+
+              return (
+                <Badge bg={variant} className="ms-2">
+                  {label}
+                </Badge>
+              );
+            })()}
+          </div>
         </p>
 
         {isAdmin && (
@@ -225,8 +244,7 @@ export default function BookDetailPopup({
               book.borrows.map((b, i) => (
                 <div key={i}>
                   <p>
-                    👤 {b.borrower} – Hết hạn:{" "}
-                    {new Date(Number(b.returnDate) * 1000).toLocaleDateString()}
+                    👤 {b.borrower} – Hết hạn: {b.returnDate}
                     {isAdmin && (
                       <Button
                         variant="danger"

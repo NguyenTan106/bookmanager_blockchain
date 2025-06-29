@@ -5,6 +5,7 @@ import "./App.css";
 
 import AdminManagement from "./components/AdminManagement";
 import BookList from "./components/BookList";
+import SearchPage from "./components/SearchPage";
 import EventLogs from "./components/EventLogs";
 import { getUserRole } from "./components/GetUserRoles";
 import SetUserName from "./components/SetUserName";
@@ -13,7 +14,8 @@ import Tab from "@mui/material/Tab";
 import Box from "@mui/material/Box";
 import { Container, Row, Col } from "react-bootstrap";
 import { uploadImageToBackend, uploadPDFToBackend } from "./services/ipfsAPI"; // Import các hàm upload từ backend
-import CategoryManager from "./components/CatetoriesMagager";
+import { fetchBooks } from "./services/bookApi"; // Import hàm lấy sách từ API
+import { searchBooks } from "./services/searchApi";
 function App() {
   const [account, setAccount] = useState("");
   const [bookContract, setBookContract] = useState(null);
@@ -33,6 +35,7 @@ function App() {
   const [username, setUsername] = useState("");
   const [currentUsername, setCurrentUsername] = useState("");
   const isRequesting = useRef(false); // tránh gọi trùng
+
   useEffect(() => {
     loadBlockchain();
   }, []);
@@ -64,16 +67,18 @@ function App() {
     try {
       if (window.ethereum) {
         const web3 = new Web3(window.ethereum);
-        await window.ethereum.request({
+        const existAcc = await window.ethereum.request({
           method: "eth_requestAccounts",
         });
 
-        const accounts = await web3.eth.getAccounts();
-        if (!accounts || accounts.length === 0) {
-          alert("Không tìm thấy tài khoản Ethereum.");
+        if (existAcc && existAcc.length === 0) {
+          alert("Vui lòng kết nối tài khoản Ethereum trong MetaMask.");
           return;
+        } else {
+          const accounts = await web3.eth.getAccounts();
+          setAccount(accounts[0]);
         }
-        setAccount(accounts[0]);
+
         const networkId = await web3.eth.net.getId();
         const deployed = BookManager.networks[networkId];
 
@@ -102,24 +107,20 @@ function App() {
     }
   };
 
-  const loadBooks = async (contract) => {
+  const loadBooks = async () => {
     try {
-      const result = await contract.methods.getAllBooks().call();
-      const filtered = result.filter((book) => !book.isDeleted);
-
+      const result = await fetchBooks();
       const updatedBooks = await Promise.all(
-        filtered.map(async (book) => {
+        result.map(async (book) => {
           const bought = await hasBought(book.id);
-          // console.log(book.coverImageHash);
-
           return { ...book, hasBought: bought };
         })
       );
       setBooks(updatedBooks);
-      return updatedBooks; // 👈 THÊM DÒNG NÀY để trả về danh sách mới
+      return updatedBooks;
     } catch (error) {
-      console.error("Error loading books:", error);
-      return []; // 👈 Tránh lỗi nếu xảy ra
+      console.error("❌ Lỗi khi tải sách:", error);
+      return [];
     }
   };
 
@@ -202,7 +203,7 @@ function App() {
     console.log("🔧 Bắt đầu cập nhật sách...");
     console.log(
       "🔍 form.category:",
-      form.category.map((cat) => Number(cat))
+      form.category.map((cat) => cat.id)
     );
     try {
       // 1. Kiểm tra quyền
@@ -241,7 +242,7 @@ function App() {
         .editBook(
           bookId,
           form.title,
-          form.category.map((cat) => Number(cat)),
+          form.category.map((cat) => cat.id),
           ipfsHash,
           imageIpfsHash,
           Number(form.price),
@@ -253,7 +254,7 @@ function App() {
         .editBook(
           bookId,
           form.title,
-          form.category.map((cat) => Number(cat)),
+          form.category.map((cat) => cat.id),
           ipfsHash,
           imageIpfsHash,
           Number(form.price),
@@ -369,6 +370,11 @@ function App() {
             </TabList>
           </Box>
           <TabPanel value="1">
+            <SearchPage
+              setBooks={setBooks}
+              books={books}
+              bookContract={bookContract}
+            />
             <BookList
               books={books}
               bookContract={bookContract}

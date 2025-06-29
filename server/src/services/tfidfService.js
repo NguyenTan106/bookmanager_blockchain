@@ -1,17 +1,20 @@
 const tokenize = (text) => {
   return text
     .toLowerCase()
-    .replace(/[^\p{L}\s]/gu, "") // loại dấu câu
+    .replace(/[^\p{L}\p{N}\s]/gu, "")
     .split(/\s+/)
     .filter(Boolean); // loại từ rỗng
 };
-const computeTfIdf = (query, documents) => {
+
+const computeTfIdf = async (query, documents) => {
   const totalDocs = documents.length;
   // console.log(totalDocs);
+  // const categoryMap = await getCategories();
+  // console.log(categoryMap);
   // B1: Tokenize toàn bộ tài liệu
-  const docsTokens = documents.map((doc) =>
-    tokenize(doc.content + " " + doc.title)
-  );
+  const docsTokens = documents.map((doc) => {
+    return tokenize(doc.description + " " + doc.title + " " + doc.category);
+  });
 
   // B2: Đếm df (document frequency)
   const dfMap = {}; // { từ: số tài liệu chứa từ đó }
@@ -51,7 +54,7 @@ const computeTfIdf = (query, documents) => {
       const idf = Math.log(totalDocs / df);
       score += tf * idf;
     });
-
+    // console.log({ ...doc, score });
     return { ...doc, score };
   });
 };

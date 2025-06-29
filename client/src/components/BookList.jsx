@@ -1,14 +1,11 @@
 import React, { useState, useEffect } from "react";
 import "./BookList.css";
-import Row from "react-bootstrap/Row";
-import Col from "react-bootstrap/Col";
-import Button from "react-bootstrap/Button";
+import { Row, Button, Col, Badge, Form } from "react-bootstrap";
 import BookDetailPopup from "./BookDetailPopup";
 import BookAuthor from "./BookAuthor";
 import EditBookPopup from "./EditBookPopup";
 import SearchPage from "./SearchPage";
 import { fetchCategories } from "../services/categoryApi";
-
 export default function BookList({
   books,
   handleBorrow,
@@ -54,7 +51,7 @@ export default function BookList({
         value: cat.name,
         label: cat.name,
       }));
-      console.log("Thể loại:", formatted);
+      // console.log("Thể loại:", formatted);
 
       setCategories(formatted);
     } catch (err) {
@@ -77,18 +74,19 @@ export default function BookList({
     }
   }, [books, currentPage, itemsPerPage]);
 
-  const openEditPopup = (book) => {
-    // console.log(book.categoryIds);
+  const openEditPopup = async (book) => {
     setEditingBook(book);
+    // console.log(book.categoryIds);
     setEditForm({
       title: book.title,
-      category: book.categoryIds || [], // thêm category nếu có
+      category: book.category || [], // thêm category nếu có
       price: book.price,
       oldPdfHash: book.ipfsHash, // giữ lại file PDF cũ
       oldCoverHash: book.coverImageHash || "",
       description: book.description, // thêm mô tả nếu có
     });
-    console.log(book.categoryIds);
+    await loadCategories();
+    console.log(book.category);
   };
 
   const closePopup = () => {
@@ -106,8 +104,7 @@ export default function BookList({
       editForm.title === editingBook.title &&
       editForm.price === editingBook.price &&
       editForm.description === editingBook.description &&
-      JSON.stringify(editForm.category.map(Number).sort()) ===
-        JSON.stringify((editingBook.categoryIds || []).map(Number).sort()) &&
+      editForm.category === editingBook.category &&
       !pdfFile &&
       !imageFile;
 
@@ -160,8 +157,8 @@ export default function BookList({
 
   return (
     <>
-      <SearchPage />
       <h3>Book List</h3>
+      <hr />
       <Row>
         {books.length === 0 ? (
           <p>No books yet.</p>
@@ -180,41 +177,71 @@ export default function BookList({
               key={index}
             >
               <div>
-                <strong>{book.title}</strong> by
-                <BookAuthor
-                  owner={book.performedBy}
-                  bookContract={bookContract}
-                />{" "}
-                -{" "}
-                <u>
-                  <i>{book.price || 0} ETH</i>
-                </u>
+                <strong>{book.title}</strong>
+                <div>
+                  👤
+                  <BookAuthor
+                    owner={book.performedBy}
+                    bookContract={bookContract}
+                  />{" "}
+                  | 💰
+                  <u>
+                    <i>{book.price || 0} ETH</i>
+                  </u>
+                </div>
               </div>
-              <div>
+              <div className="mb-2">
                 <strong>Trạng thái:</strong>{" "}
-                {isAdmin ? (
-                  book.status == 0 ? (
-                    "Available"
-                  ) : (
-                    "Borrowed"
-                  )
-                ) : book.hasBought ? (
-                  <span className="text-success">Đã mua ✅</span>
-                ) : hasBorrowed(book) ? (
-                  "Borrowed"
-                ) : (
-                  "Available"
-                )}
+                {(() => {
+                  let label = "Unknown";
+                  let variant = "secondary";
+
+                  if (isAdmin) {
+                    if (book.status === "Available" || book.status === 0) {
+                      label = "Available";
+                      variant = "success";
+                    } else {
+                      label = "Borrowed";
+                      variant = "warning";
+                    }
+                  } else if (book.hasBought) {
+                    label = "Đã mua";
+                    variant = "info";
+                  } else if (hasBorrowed(book)) {
+                    label = "Borrowed";
+                    variant = "warning";
+                  } else {
+                    label = "Available";
+                    variant = "success";
+                  }
+
+                  return (
+                    <Badge bg={variant} className="ms-2">
+                      {label}
+                    </Badge>
+                  );
+                })()}
               </div>
-              <div>
+
+              <div
+                style={{
+                  width: "100%", // chiếm 100% của col
+                  paddingTop: "80%", // tỷ lệ 2:3 (height/width * 100%)
+                  position: "relative",
+                  overflow: "hidden",
+                  marginTop: "5px",
+                }}
+              >
                 <img
                   src={`https://ipfs.io/ipfs/${book.coverImageHash}`}
                   alt="Ảnh bìa"
                   style={{
-                    width: "50%",
-                    height: "190px",
-                    borderRadius: "8px",
-                    marginTop: "5px",
+                    position: "absolute",
+                    top: 0,
+                    left: 0,
+                    width: "100%",
+                    height: "100%",
+                    objectFit: "contain", // hoặc "contain" nếu muốn toàn ảnh hiển thị
                   }}
                 />
               </div>
@@ -250,16 +277,12 @@ export default function BookList({
                     >
                       🔄 Trả sách
                     </Button>
-                    <p>
+                    <p className="mt-1">
                       📅 Hết hạn:{" "}
-                      {new Date(
-                        Number(
-                          book.borrows.find(
-                            (b) =>
-                              b.borrower.toLowerCase() === account.toLowerCase()
-                          )?.returnDate || 0
-                        ) * 1000
-                      ).toLocaleDateString()}
+                      {book.borrows.find(
+                        (b) =>
+                          b.borrower.toLowerCase() === account.toLowerCase()
+                      )?.returnDate || 0}
                     </p>
                   </>
                 ) : book.hasBought ? (
@@ -363,7 +386,6 @@ export default function BookList({
           closePopup={closePopup}
           categories={categories}
           isMulti={true}
-          value={editForm.category}
         />
       )}
 

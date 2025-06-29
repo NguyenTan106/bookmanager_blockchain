@@ -8,6 +8,7 @@ const {
   addCategoryService,
   getCategoriesService,
   deleteCategoryService,
+  getAllBooksService,
 } = require("./routes/api");
 const multer = require("multer");
 require("dotenv").config();
@@ -19,12 +20,13 @@ const upload = multer({ dest: "uploads/" });
 app.use(cors());
 app.use(bodyParser.json());
 
-// app.use("/", searchBooksService);
+app.use("/", searchBooksService);
 app.use("/ipfs", upload.single("file"), uploadPDFService);
 app.use("/ipfs", upload.single("file"), uploadImageService);
 app.use("/", addCategoryService);
 app.use("/", getCategoriesService);
 app.use("/", deleteCategoryService);
+app.use("/", getAllBooksService);
 
 app.listen(PORT, () => {
   console.log(`TF-IDF backend running at http://localhost:${PORT}`);

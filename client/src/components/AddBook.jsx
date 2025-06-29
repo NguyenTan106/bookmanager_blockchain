@@ -137,6 +137,7 @@ export default function AddBook({
                   value={form.category}
                   isMulti={true}
                   onChange={(val) => setForm({ ...form, category: val })}
+                  loadBooks={loadBooks}
                 />
                 <Button
                   style={{

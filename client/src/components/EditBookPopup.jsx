@@ -10,7 +10,6 @@ export default function EditBookPopup({
   closePopup,
   imageFile,
   categories,
-  value,
   isMulti,
 }) {
   return (
@@ -54,28 +53,22 @@ export default function EditBookPopup({
             }
           />
         </Form.Group>
-        {/* <Form.Group className="mb-3">
-          <Form.Label>Thể loại</Form.Label>
-          <Form.Control
-            placeholder="Nhập loại sách..."
-            value={editForm.category}
-            onChange={(e) =>
-              setEditForm({ ...editForm, category: e.target.value })
-            }
-          />
-        </Form.Group> */}
+
         <Form.Label>📚 Thể loại</Form.Label>
         <Select
           className="mb-3"
           isMulti={isMulti}
           options={categories} // [{ id, label, value }]
-          value={categories.filter((opt) =>
-            editForm.category.map(Number).includes(opt.id)
-          )} // Chuyển đổi sang định dạng [{ id, label, value }]
+          value={categories.filter((cat) =>
+            editForm.category.some((c) => c.id === cat.id)
+          )}
           onChange={(selected) =>
             setEditForm({
               ...editForm,
-              category: selected.map((opt) => Number(opt.id)),
+              category: selected.map((opt) => ({
+                id: opt.id,
+                name: opt.label,
+              })),
             })
           }
           placeholder="Chọn thể loại..."
@@ -86,30 +79,6 @@ export default function EditBookPopup({
             }),
           }}
         />
-        {/* 
-        <Select
-          className="basic-multi-select"
-          classNamePrefix="select"
-          isMulti={isMulti}
-          options={categories} // ✅ dùng trực tiếp
-          value={
-            isMulti
-              ? categories.filter((opt) => value.includes(opt.id))
-              : categories.find((opt) => opt.id === value) || null
-          }
-          onChange={(selected) =>
-            isMulti
-              ? onChange(selected.map((opt) => opt.id)) // truyền array string
-              : onChange(selected?.value)
-          }
-          placeholder="Chọn thể loại..."
-          styles={{
-            menu: (provided) => ({
-              ...provided,
-              zIndex: 9999,
-            }),
-          }}
-        /> */}
 
         <Form.Group controlId="formPrice" className="mb-3">
           <Form.Label>💰 Giá (ETH)</Form.Label>
