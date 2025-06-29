@@ -1,2 +1,0 @@
-lỗi nếu mở gg trước khi deploy thì sẽ bị lỗi metamask
-ipfs free nên đường truyền mạng yếu thường xuyên bị lỗi

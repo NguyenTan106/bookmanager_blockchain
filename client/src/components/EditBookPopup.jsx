@@ -1,6 +1,6 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Form, Button } from "react-bootstrap";
-
+import Select from "react-select";
 export default function EditBookPopup({
   editForm,
   setEditForm,
@@ -9,6 +9,9 @@ export default function EditBookPopup({
   submitUpdate,
   closePopup,
   imageFile,
+  categories,
+  value,
+  isMulti,
 }) {
   return (
     <div
@@ -51,6 +54,62 @@ export default function EditBookPopup({
             }
           />
         </Form.Group>
+        {/* <Form.Group className="mb-3">
+          <Form.Label>Thể loại</Form.Label>
+          <Form.Control
+            placeholder="Nhập loại sách..."
+            value={editForm.category}
+            onChange={(e) =>
+              setEditForm({ ...editForm, category: e.target.value })
+            }
+          />
+        </Form.Group> */}
+        <Form.Label>📚 Thể loại</Form.Label>
+        <Select
+          className="mb-3"
+          isMulti={isMulti}
+          options={categories} // [{ id, label, value }]
+          value={categories.filter((opt) =>
+            editForm.category.map(Number).includes(opt.id)
+          )} // Chuyển đổi sang định dạng [{ id, label, value }]
+          onChange={(selected) =>
+            setEditForm({
+              ...editForm,
+              category: selected.map((opt) => Number(opt.id)),
+            })
+          }
+          placeholder="Chọn thể loại..."
+          styles={{
+            menu: (provided) => ({
+              ...provided,
+              zIndex: 9999,
+            }),
+          }}
+        />
+        {/* 
+        <Select
+          className="basic-multi-select"
+          classNamePrefix="select"
+          isMulti={isMulti}
+          options={categories} // ✅ dùng trực tiếp
+          value={
+            isMulti
+              ? categories.filter((opt) => value.includes(opt.id))
+              : categories.find((opt) => opt.id === value) || null
+          }
+          onChange={(selected) =>
+            isMulti
+              ? onChange(selected.map((opt) => opt.id)) // truyền array string
+              : onChange(selected?.value)
+          }
+          placeholder="Chọn thể loại..."
+          styles={{
+            menu: (provided) => ({
+              ...provided,
+              zIndex: 9999,
+            }),
+          }}
+        /> */}
 
         <Form.Group controlId="formPrice" className="mb-3">
           <Form.Label>💰 Giá (ETH)</Form.Label>
@@ -60,6 +119,18 @@ export default function EditBookPopup({
             value={editForm.price}
             onChange={(e) =>
               setEditForm({ ...editForm, price: e.target.value })
+            }
+          />
+        </Form.Group>
+        <Form.Group className="mb-3">
+          <Form.Label>✍️ Mô tả</Form.Label>
+          <Form.Control
+            as="textarea"
+            rows={4}
+            placeholder="Nhập mô tả chi tiết về sách..."
+            value={editForm.description}
+            onChange={(e) =>
+              setEditForm({ ...editForm, description: e.target.value })
             }
           />
         </Form.Group>

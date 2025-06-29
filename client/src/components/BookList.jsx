@@ -6,6 +6,8 @@ import Button from "react-bootstrap/Button";
 import BookDetailPopup from "./BookDetailPopup";
 import BookAuthor from "./BookAuthor";
 import EditBookPopup from "./EditBookPopup";
+import SearchPage from "./SearchPage";
+import { fetchCategories } from "../services/categoryApi";
 
 export default function BookList({
   books,
@@ -24,9 +26,11 @@ export default function BookList({
   const [editingBook, setEditingBook] = useState(null); // sách đang sửa
   const [editForm, setEditForm] = useState({
     title: "",
+    category: "",
     price: "",
     oldPdfHash: "",
     oldCoverHash: "",
+    description: "", // thêm mô tả
   }); // form sửa sách
   const [selectedBook, setSelectedBook] = useState(null);
   const [showFullPDF, setShowFullPDF] = useState(false);
@@ -39,6 +43,29 @@ export default function BookList({
     const saved = localStorage.getItem("currentPage");
     return saved ? parseInt(saved, 10) : 1;
   });
+
+  const [categories, setCategories] = useState([]);
+
+  const loadCategories = async () => {
+    try {
+      const data = await fetchCategories();
+      const formatted = data.map((cat) => ({
+        id: cat.id,
+        value: cat.name,
+        label: cat.name,
+      }));
+      console.log("Thể loại:", formatted);
+
+      setCategories(formatted);
+    } catch (err) {
+      console.error("Lỗi lấy thể loại:", err);
+    }
+  };
+
+  useEffect(() => {
+    loadCategories();
+  }, []);
+
   useEffect(() => {
     localStorage.setItem("currentPage", currentPage);
   }, [currentPage]);
@@ -51,18 +78,22 @@ export default function BookList({
   }, [books, currentPage, itemsPerPage]);
 
   const openEditPopup = (book) => {
+    // console.log(book.categoryIds);
     setEditingBook(book);
     setEditForm({
       title: book.title,
+      category: book.categoryIds || [], // thêm category nếu có
       price: book.price,
       oldPdfHash: book.ipfsHash, // giữ lại file PDF cũ
       oldCoverHash: book.coverImageHash || "",
+      description: book.description, // thêm mô tả nếu có
     });
+    console.log(book.categoryIds);
   };
 
   const closePopup = () => {
     setEditingBook(null);
-    setEditForm({ title: "", price: "" });
+    setEditForm({ title: "", category: "", price: "", description: "" });
   };
 
   const submitUpdate = () => {
@@ -70,7 +101,20 @@ export default function BookList({
       alert("Vui lòng nhập đầy đủ tiêu đề sách.");
       return;
     }
+    // ✅ So sánh các trường quan trọng
+    const isUnchanged =
+      editForm.title === editingBook.title &&
+      editForm.price === editingBook.price &&
+      editForm.description === editingBook.description &&
+      JSON.stringify(editForm.category.map(Number).sort()) ===
+        JSON.stringify((editingBook.categoryIds || []).map(Number).sort()) &&
+      !pdfFile &&
+      !imageFile;
 
+    if (isUnchanged) {
+      alert("Không có thay đổi nào.");
+      return;
+    }
     handleUpdate(
       Number(editingBook.id),
       editForm,
@@ -116,6 +160,7 @@ export default function BookList({
 
   return (
     <>
+      <SearchPage />
       <h3>Book List</h3>
       <Row>
         {books.length === 0 ? (
@@ -126,7 +171,7 @@ export default function BookList({
               className="text-center col-lg-3 col-12 mb-4 book-item"
               bg="Success"
               onClick={() => {
-                if (isAdmin) {
+                if (isAdmin || book.hasBought) {
                   setSelectedBook(book);
                 } else {
                   return;
@@ -183,7 +228,8 @@ export default function BookList({
                     <Button
                       className="mt-2"
                       variant="secondary"
-                      onClick={() => {
+                      onClick={(e) => {
+                        e.stopPropagation();
                         setSelectedPDF(book.ipfsHash);
                         setShowFullPDF(true);
                       }}
@@ -315,6 +361,9 @@ export default function BookList({
           setImageFile={setImageFile}
           submitUpdate={submitUpdate}
           closePopup={closePopup}
+          categories={categories}
+          isMulti={true}
+          value={editForm.category}
         />
       )}
 

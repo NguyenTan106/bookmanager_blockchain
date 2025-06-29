@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import Web3 from "web3";
 import BookManager from "./build/contracts/BookManager.json";
 import "./App.css";
@@ -12,7 +12,8 @@ import { TabContext, TabList, TabPanel } from "@mui/lab";
 import Tab from "@mui/material/Tab";
 import Box from "@mui/material/Box";
 import { Container, Row, Col } from "react-bootstrap";
-import { uploadPDF, uploadImage } from "./ipfs"; // Import các hàm upload từ ipfs
+import { uploadImageToBackend, uploadPDFToBackend } from "./services/ipfsAPI"; // Import các hàm upload từ backend
+import CategoryManager from "./components/CatetoriesMagager";
 function App() {
   const [account, setAccount] = useState("");
   const [bookContract, setBookContract] = useState(null);
@@ -20,8 +21,10 @@ function App() {
   const [form, setForm] = useState({
     title: "",
     price: "",
+    category: "",
     pdfHash: "",
     coverImageHash: "",
+    description: "",
   });
   const [isAdmin, setIsAdmin] = useState(false);
   const [value, setValue] = useState("1");
@@ -29,7 +32,7 @@ function App() {
   const [userRole, setUserRole] = useState(null); // state để lưu vai trò người dùng
   const [username, setUsername] = useState("");
   const [currentUsername, setCurrentUsername] = useState("");
-
+  const isRequesting = useRef(false); // tránh gọi trùng
   useEffect(() => {
     loadBlockchain();
   }, []);
@@ -54,15 +57,23 @@ function App() {
     delayLoadBooks();
   }, [bookContract, account]);
 
+  // Hàm loadBlockchain để kết nối với MetaMask và lấy thông tin blockchain
   const loadBlockchain = async () => {
+    if (isRequesting.current) return; // đã đang gọi rồi
+    isRequesting.current = true;
     try {
       if (window.ethereum) {
         const web3 = new Web3(window.ethereum);
-        await window.ethereum.request({ method: "eth_requestAccounts" });
+        await window.ethereum.request({
+          method: "eth_requestAccounts",
+        });
 
         const accounts = await web3.eth.getAccounts();
+        if (!accounts || accounts.length === 0) {
+          alert("Không tìm thấy tài khoản Ethereum.");
+          return;
+        }
         setAccount(accounts[0]);
-
         const networkId = await web3.eth.net.getId();
         const deployed = BookManager.networks[networkId];
 
@@ -79,7 +90,15 @@ function App() {
         alert("Please install MetaMask");
       }
     } catch (error) {
-      console.error("Error loading blockchain:", error);
+      if (error.code === -32002) {
+        alert("MetaMask đang xử lý yêu cầu. Vui lòng chờ hoặc kiểm tra popup.");
+      } else if (error.code === 4001) {
+        alert("Bạn đã từ chối kết nối MetaMask.");
+      } else {
+        console.error("Lỗi khi load blockchain:", error);
+      }
+    } finally {
+      isRequesting.current = false;
     }
   };
 
@@ -91,7 +110,7 @@ function App() {
       const updatedBooks = await Promise.all(
         filtered.map(async (book) => {
           const bought = await hasBought(book.id);
-          console.log(book.coverImageHash);
+          // console.log(book.coverImageHash);
 
           return { ...book, hasBought: bought };
         })
@@ -181,7 +200,10 @@ function App() {
     imageFile
   ) => {
     console.log("🔧 Bắt đầu cập nhật sách...");
-
+    console.log(
+      "🔍 form.category:",
+      form.category.map((cat) => Number(cat))
+    );
     try {
       // 1. Kiểm tra quyền
       if (owner.toLowerCase() !== account.toLowerCase() && !isSuperAdmin) {
@@ -200,10 +222,12 @@ function App() {
         }
       }
 
-      const ipfsHash = pdfFile ? await uploadPDF(pdfFile) : form.oldPdfHash;
+      const ipfsHash = pdfFile
+        ? await uploadPDFToBackend(pdfFile)
+        : form.oldPdfHash;
 
       const imageIpfsHash = imageFile
-        ? await uploadImage(imageFile)
+        ? await uploadImageToBackend(imageFile)
         : form.oldCoverHash;
       // console.log(cleanPdfHash, cleanCoverHash);
 
@@ -217,9 +241,11 @@ function App() {
         .editBook(
           bookId,
           form.title,
+          form.category.map((cat) => Number(cat)),
           ipfsHash,
           imageIpfsHash,
-          Number(form.price)
+          Number(form.price),
+          form.description
         )
         .estimateGas({ from: account });
 
@@ -227,9 +253,11 @@ function App() {
         .editBook(
           bookId,
           form.title,
+          form.category.map((cat) => Number(cat)),
           ipfsHash,
           imageIpfsHash,
-          Number(form.price)
+          Number(form.price),
+          form.description
         )
         .send({ from: account, gas: estimatedGas });
 

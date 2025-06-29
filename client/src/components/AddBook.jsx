@@ -1,7 +1,8 @@
-import { uploadPDF, uploadImage } from "../ipfs";
+import { uploadPDFToBackend, uploadImageToBackend } from "../services/ipfsAPI";
 import React, { useState, useRef } from "react";
 import { Container, Button, Col, Form, Row } from "react-bootstrap";
 import UploadCoverImage from "./UploadCoverImage";
+import CategoryManager from "./CatetoriesMagager";
 export default function AddBook({
   form,
   setForm,
@@ -14,10 +15,17 @@ export default function AddBook({
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef(null);
   const fileImageRef = useRef(null);
+  const [showCatModal, setShowCatModal] = useState(false);
 
   const handleUploadAndAddBook = async () => {
-    console.log(form);
-    if (!pdfFile || !form.title || !form.price || !imageFile) {
+    // console.log(form);
+    if (
+      !pdfFile ||
+      !form.title ||
+      !form.price ||
+      !form.description ||
+      !imageFile
+    ) {
       alert("Thiếu thông tin hoặc file PDF");
       return;
     }
@@ -40,7 +48,7 @@ export default function AddBook({
       setUploading(true);
 
       // Upload file PDF lên IPFS
-      const ipfsHash = await uploadPDF(pdfFile);
+      const ipfsHash = await uploadPDFToBackend(pdfFile);
       console.log("Uploaded IPFS hash:", ipfsHash);
 
       if (!ipfsHash || typeof ipfsHash !== "string") {
@@ -50,7 +58,7 @@ export default function AddBook({
       }
 
       // Nếu có ảnh bìa, upload lên IPFS
-      const imageIpfsHash = await uploadImage(imageFile);
+      const imageIpfsHash = await uploadImageToBackend(imageFile);
       console.log("Uploaded cover image IPFS hash:", imageIpfsHash);
       if (!imageIpfsHash || typeof imageIpfsHash !== "string") {
         alert("❌ Lỗi IPFS khi upload ảnh bìa");
@@ -59,11 +67,25 @@ export default function AddBook({
       }
       // Gọi smart contract: chỉ cần truyền title + ipfsHash
       await bookContract.methods
-        .addBook(form.title, ipfsHash, imageIpfsHash, Number(form.price))
+        .addBook(
+          form.title,
+          form.category.map((id) => Number(id)),
+          ipfsHash,
+          imageIpfsHash,
+          Number(form.price),
+          form.description
+        )
         .send({ from: account });
 
       // Reset lại form
-      setForm({ title: "", price: 0, pdfHash: "", coverImageHash: "" });
+      setForm({
+        title: "",
+        price: 0,
+        category: "",
+        pdfHash: "",
+        coverImageHash: "",
+        description: "",
+      });
       setPdfFile(null);
       setImageFile(null);
       if (fileInputRef.current) {
@@ -82,14 +104,13 @@ export default function AddBook({
       setUploading(false);
     }
   };
-
   return (
     <Container className="mb-4">
       <Row className="justify-content-center">
         <Col xs={12} md={10} lg={8}>
           <Row className="g-3 align-items-start">
             {/* Cột trái: thông tin sách */}
-            <Col xs={12} md={7}>
+            <Col xs={12} md={8}>
               <Form.Group className="mb-3">
                 <Form.Label>📖 Tiêu đề sách</Form.Label>
                 <Form.Control
@@ -108,9 +129,41 @@ export default function AddBook({
                   onChange={(e) => setForm({ ...form, price: e.target.value })}
                 />
               </Form.Group>
+              <Form.Group className="mb-3">
+                <Form.Label>Thể loại</Form.Label>
+                <CategoryManager
+                  show={showCatModal}
+                  onHide={() => setShowCatModal(false)}
+                  value={form.category}
+                  isMulti={true}
+                  onChange={(val) => setForm({ ...form, category: val })}
+                />
+                <Button
+                  style={{
+                    padding: "5px 10px",
+                    fontSize: "14px",
+                  }}
+                  variant="outline-primary mt-2"
+                  onClick={() => setShowCatModal(true)}
+                >
+                  📚 Quản lý thể loại
+                </Button>
+              </Form.Group>
 
               <Form.Group className="mb-3">
-                <Form.Label>📄 Tệp PDF</Form.Label>
+                <Form.Label>✍️ Mô tả</Form.Label>
+                <Form.Control
+                  as="textarea"
+                  rows={4}
+                  placeholder="Nhập mô tả chi tiết về sách..."
+                  value={form.description}
+                  onChange={(e) =>
+                    setForm({ ...form, description: e.target.value })
+                  }
+                />
+              </Form.Group>
+
+              <Form.Group className="mb-3">
                 <div className="d-flex align-items-center">
                   <Form.Control
                     type="file"
@@ -152,7 +205,7 @@ export default function AddBook({
             </Col>
 
             {/* Cột phải: ảnh bìa */}
-            <Col xs={12} md={5}>
+            <Col xs={12} md={4}>
               <UploadCoverImage
                 setImageFile={setImageFile}
                 imageFile={imageFile}

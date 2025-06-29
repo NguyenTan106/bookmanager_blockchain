@@ -3,6 +3,7 @@ import { Container } from "react-bootstrap";
 import Button from "react-bootstrap/Button";
 import BookAuthor from "./BookAuthor";
 import Web3 from "web3";
+import { fetchCategories } from "../services/categoryApi";
 export default function BookDetailPopup({
   book,
   onClose,
@@ -20,7 +21,24 @@ export default function BookDetailPopup({
   const [showBorrowers, setShowBorrowers] = useState(false);
   const [showBuyers, setShowBuyers] = useState(false);
   const [buyersList, setBuyersList] = useState([]);
+  const [categoryMap, setCategoryMap] = useState({});
 
+  useEffect(() => {
+    const loadCategories = async () => {
+      try {
+        const data = await fetchCategories(); // [{ id, name }]
+        const map = {};
+        data.forEach((cat) => {
+          map[cat.id] = cat.name;
+        });
+        setCategoryMap(map);
+      } catch (err) {
+        console.error("Lỗi tải thể loại:", err);
+      }
+    };
+
+    loadCategories();
+  }, []);
   useEffect(() => {
     const loadBuyers = async () => {
       if (bookContract && book && isAdmin) {
@@ -86,10 +104,21 @@ export default function BookDetailPopup({
           )}
         </p>
         <p>
+          <strong>Loại sách:</strong>{" "}
+          {Object.keys(categoryMap).length === 0
+            ? "Đang tải..."
+            : book.categoryIds
+                .map((id) => categoryMap[id] || `#${id}`)
+                .join(", ")}
+        </p>
+        <p>
           <strong>IPFS:</strong> {book.ipfsHash}
         </p>
         <p>
           <strong>CoverImage:</strong> {book.coverImageHash}
+        </p>
+        <p>
+          <strong>Description:</strong> {book.description}
         </p>
         <p>
           <strong>Price:</strong>{" "}

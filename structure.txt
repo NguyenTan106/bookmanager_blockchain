@@ -1,0 +1,18 @@
+book-dapp/
+│
+├── client/               # Frontend (React + Web3.js)
+│   ├── public/
+│   ├── src/
+│   │   ├── App.js
+│   │   ├── web3.js       # Tạo instance Web3
+│   │   └── utils/        # Gọi API backend, xử lý ký
+│   └── package.json
+│
+├── server/               # Backend (Node.js + Express + Ethers.js)
+│   ├── src/
+│   │   ├── index.js      # Entry point
+│   │   ├── verify.js     # Xác thực chữ ký
+│   │   └── blockchain/   # Tạo provider đọc blockchain
+│   └── package.json
+│
+├── README.md
