@@ -5,6 +5,7 @@ import BookDetailPopup from "./BookDetailPopup";
 import BookAuthor from "./BookAuthor";
 import EditBookPopup from "./EditBookPopup";
 import { fetchCategories } from "../services/categoryApi";
+import { FaAngleLeft, FaAngleRight } from "react-icons/fa";
 export default function BookList({
   books,
   handleBorrow,
@@ -34,14 +35,13 @@ export default function BookList({
   const [selectedPDF, setSelectedPDF] = useState(null);
   const [pdfFile, setPdfFile] = useState(null);
   const [imageFile, setImageFile] = useState(null);
+  const [categories, setCategories] = useState([]);
 
   const itemsPerPage = 4;
   const [currentPage, setCurrentPage] = useState(() => {
     const saved = localStorage.getItem("currentPage");
     return saved ? parseInt(saved, 10) : 1;
   });
-
-  const [categories, setCategories] = useState([]);
 
   const loadCategories = async () => {
     try {
@@ -58,10 +58,6 @@ export default function BookList({
       console.error("Lỗi lấy thể loại:", err);
     }
   };
-
-  useEffect(() => {
-    loadCategories();
-  }, []);
 
   useEffect(() => {
     localStorage.setItem("currentPage", currentPage);
@@ -313,25 +309,56 @@ export default function BookList({
           ))
         )}
         {totalPages > 1 && (
-          <div className="d-flex justify-content-center mt-3">
+          <div className="d-flex justify-content-center align-items-center mt-4">
             <Button
-              variant="outline-secondary"
+              variant="outline-primary"
               onClick={() => handlePageChange(currentPage - 1)}
               disabled={currentPage === 1}
               className="me-2"
             >
-              ◀️
+              <FaAngleLeft /> Trước
             </Button>
-            <span style={{ lineHeight: "38px" }}>
-              Trang {currentPage} / {totalPages}
-            </span>
+
+            {/* Trang hiện tại và xung quanh */}
+            {[...Array(totalPages)].map((_, i) => {
+              const pageNum = i + 1;
+              if (
+                pageNum === 1 ||
+                pageNum === totalPages ||
+                Math.abs(currentPage - pageNum) <= 1
+              ) {
+                return (
+                  <Button
+                    key={pageNum}
+                    variant={
+                      pageNum === currentPage ? "primary" : "outline-primary"
+                    }
+                    onClick={() => handlePageChange(pageNum)}
+                    className="mx-1"
+                  >
+                    {pageNum}
+                  </Button>
+                );
+              } else if (
+                (pageNum === currentPage - 2 && currentPage > 3) ||
+                (pageNum === currentPage + 2 && currentPage < totalPages - 2)
+              ) {
+                return (
+                  <span key={pageNum} className="mx-1 text-muted">
+                    ...
+                  </span>
+                );
+              }
+              return null;
+            })}
+
             <Button
-              variant="outline-secondary"
+              variant="outline-primary"
               onClick={() => handlePageChange(currentPage + 1)}
               disabled={currentPage === totalPages}
               className="ms-2"
             >
-              ▶️
+              Sau <FaAngleRight />
             </Button>
           </div>
         )}

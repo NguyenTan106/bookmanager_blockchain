@@ -53,46 +53,36 @@ function App() {
     loadBlockchain();
   }, []);
 
-  const sortManage = async () => {
-    const storedSort = localStorage.getItem("sortSettings");
-    const storedView = localStorage.getItem("viewMode");
-
-    if (storedSort) {
-      const { sortBy, sortOrder } = JSON.parse(storedSort);
-      // console.log(sortBy);
-      setSortOption({ sortBy, sortOrder });
-
-      // gọi API với sortBy & sortOrder
-      const result = await sortBooks(sortBy, sortOrder);
-      console.log(result);
-      setBooks(result);
-    }
-
-    if (storedView) setViewMode(storedView);
-  };
-  useEffect(() => {
-    sortManage();
-  }, []);
+  // useEffect(() => {
+  //   const checkRole = async () => {
+  //     if (bookContract && account) {
+  //       const role = await getUserRole(bookContract, account);
+  //       console.log(role);
+  //       setUserRole(role); // set state
+  //     }
+  //   };
+  //   checkRole();
+  // }, [bookContract, account]);
 
   useEffect(() => {
     const checkRole = async () => {
       if (bookContract && account) {
         const role = await getUserRole(bookContract, account);
+        // console.log(role);
         setUserRole(role); // set state
+        if (role === "user") {
+          const delayLoadBooks = async () => {
+            // Delay nhỏ (500ms - 2s) để node kịp cập nhật contract
+            await new Promise((resolve) => setTimeout(resolve, 700));
+            if (bookContract && account) {
+              await loadBooks(bookContract);
+            }
+          };
+          delayLoadBooks();
+        }
       }
     };
-
     checkRole();
-  }, [bookContract, account]);
-  useEffect(() => {
-    const delayLoadBooks = async () => {
-      // Delay nhỏ (500ms - 2s) để node kịp cập nhật contract
-      await new Promise((resolve) => setTimeout(resolve, 700));
-      if (bookContract && account) {
-        await loadBooks(bookContract);
-      }
-    };
-    delayLoadBooks();
   }, [bookContract, account]);
 
   // Hàm loadBlockchain để kết nối với MetaMask và lấy thông tin blockchain
@@ -137,18 +127,40 @@ function App() {
       }
     }
   };
+  const sortManage = async () => {
+    // const storedView = localStorage.getItem("viewMode");
+    const storedSort = localStorage.getItem("sortSettings");
+    if (storedSort) {
+      const { sortBy, sortOrder } = JSON.parse(storedSort);
+      // console.log(sortBy);
+      setSortOption({ sortBy, sortOrder });
+
+      // gọi API với sortBy & sortOrder
+      const result = await sortBooks(sortBy, sortOrder);
+      // console.log(result);
+      setBooks(result);
+    }
+    // if (storedView) setViewMode(storedView);
+  };
 
   const loadBooks = async () => {
     try {
-      const result = await fetchBooks();
-      const updatedBooks = await Promise.all(
-        result.map(async (book) => {
-          const bought = await hasBought(book.id);
-          return { ...book, hasBought: bought };
-        })
-      );
-      setBooks(updatedBooks);
-      return updatedBooks;
+      console.log(userRole);
+      if (userRole != "admin" || userRole != "super") {
+        const result = await fetchBooks();
+        const updatedBooks = await Promise.all(
+          result.map(async (book) => {
+            const bought = await hasBought(book.id);
+            return { ...book, hasBought: bought };
+          })
+        );
+
+        console.log(updatedBooks);
+        setBooks(updatedBooks);
+        sortManage();
+      } else {
+        sortManage();
+      }
     } catch (error) {
       console.error("❌ Lỗi khi tải sách:", error);
       return [];
@@ -443,30 +455,20 @@ function App() {
                   variant="outline-dark"
                 >
                   <Dropdown.Item
-                    onClick={async () => {
-                      const sorted = await sortBooks("", "origin");
-                      setBooks(sorted);
-                    }}
+                    onClick={() => handleSortChange("", "origin")}
                     href="#/action-0"
                   >
                     <FaUndo className="me-2" /> {/* Icon undo */}
                     Ban đầu
                   </Dropdown.Item>
                   <Dropdown.Item
-                    // onClick={async () => {
-                    //   const sorted = await sortBooks("price", "asc"); // hoặc "desc"
-                    //   setBooks(sorted);
-                    // }}
-                    onClick={() => handleSortChange("asc")}
+                    onClick={() => handleSortChange("price", "asc")}
                     href="#/action-1"
                   >
                     🔼 Tăng dần
                   </Dropdown.Item>
                   <Dropdown.Item
-                    onClick={async () => {
-                      const sorted = await sortBooks("price", "dsc"); // hoặc "desc"
-                      setBooks(sorted);
-                    }}
+                    onClick={() => handleSortChange("price", "desc")}
                     href="#/action-2"
                   >
                     🔽 Giảm dần
@@ -481,30 +483,19 @@ function App() {
                   variant="outline-dark"
                 >
                   <Dropdown.Item
-                    onClick={async () => {
-                      const sorted = await sortBooks("", "origin");
-                      setBooks(sorted);
-                    }}
+                    onClick={() => handleSortChange("", "origin")}
                     href="#/action-0"
                   >
                     <FaUndo className="me-2" /> {/* Icon undo */}
                     Ban đầu
                   </Dropdown.Item>
                   <Dropdown.Item
-                    // onClick={async () => {
-                    //   const sorted = await sortBooks("title", "asc"); // hoặc "desc"
-                    //   setBooks(sorted);
-                    // }}
                     onClick={() => handleSortChange("title", "asc")}
                     href="#/action-1"
                   >
                     🔼 Tăng dần
                   </Dropdown.Item>
                   <Dropdown.Item
-                    // onClick={async () => {
-                    //   const sorted = await sortBooks("title", "desc"); // hoặc "desc"
-                    //   setBooks(sorted);
-                    // }}
                     onClick={() => handleSortChange("title", "desc")}
                     href="#/action-2"
                   >
@@ -543,7 +534,22 @@ function App() {
             </Row>
 
             <hr />
-            {viewMode === "card" ? (
+            <BookList
+              books={books}
+              bookContract={bookContract}
+              account={account}
+              handleBorrow={handleBorrow}
+              handleBuy={handleBuy}
+              handleReturn={handleReturn}
+              handleUpdate={handleUpdate}
+              handleDelete={handleDelete}
+              isAdmin={isAdmin}
+              userRole={userRole}
+              handleRevoke={handleRevoke}
+              hasBought={hasBought}
+              hasBorrowed={hasBorrowed}
+            />
+            {/* {viewMode === "card" ? (
               <BookList
                 books={books}
                 bookContract={bookContract}
@@ -558,6 +564,7 @@ function App() {
                 handleRevoke={handleRevoke}
                 hasBought={hasBought}
                 hasBorrowed={hasBorrowed}
+                sortManage={sortManage}
               />
             ) : (
               <BookListTableView
@@ -574,8 +581,9 @@ function App() {
                 handleRevoke={handleRevoke}
                 hasBought={hasBought}
                 hasBorrowed={hasBorrowed}
+                sortManage={sortManage}
               />
-            )}
+            )} */}
           </TabPanel>
           <TabPanel value="2">
             <EventLogs

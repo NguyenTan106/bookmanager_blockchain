@@ -134,38 +134,36 @@ export default function BookDetailPopup({
           </u>
         </p>
         <p>
-          <div className="mb-2">
-            <strong>Trạng thái:</strong>{" "}
-            {(() => {
-              let label = "Unknown";
-              let variant = "secondary";
+          <strong>Trạng thái:</strong>{" "}
+          {(() => {
+            let label = "Unknown";
+            let variant = "secondary";
 
-              if (isAdmin) {
-                if (book.status === "Available" || book.status === 0) {
-                  label = "Available";
-                  variant = "success";
-                } else {
-                  label = "Borrowed";
-                  variant = "warning";
-                }
-              } else if (book.hasBought) {
-                label = "Đã mua";
-                variant = "info";
-              } else if (hasBorrowed(book)) {
-                label = "Borrowed";
-                variant = "warning";
-              } else {
+            if (isAdmin) {
+              if (book.status === "Available" || book.status === 0) {
                 label = "Available";
                 variant = "success";
+              } else {
+                label = "Borrowed";
+                variant = "warning";
               }
+            } else if (book.hasBought) {
+              label = "Đã mua";
+              variant = "info";
+            } else if (hasBorrowed(book)) {
+              label = "Borrowed";
+              variant = "warning";
+            } else {
+              label = "Available";
+              variant = "success";
+            }
 
-              return (
-                <Badge bg={variant} className="ms-2">
-                  {label}
-                </Badge>
-              );
-            })()}
-          </div>
+            return (
+              <Badge bg={variant} className="ms-2">
+                {label}
+              </Badge>
+            );
+          })()}
         </p>
 
         {isAdmin && (
