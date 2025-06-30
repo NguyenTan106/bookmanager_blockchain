@@ -13,7 +13,23 @@ const computeTfIdf = async (query, documents) => {
   // console.log(categoryMap);
   // B1: Tokenize toàn bộ tài liệu
   const docsTokens = documents.map((doc) => {
-    return tokenize(doc.description + " " + doc.title + " " + doc.category);
+    // console.log(
+    //   tokenize(
+    //     doc.description +
+    //       " " +
+    //       doc.title +
+    //       " " +
+    //       doc.category.map((cat) => cat.name)
+    //   )
+    // );
+    // console.log(tokenize(doc.category.map((cat) => cat.name).join(", ")));
+    return tokenize(
+      doc.description +
+        " " +
+        doc.title +
+        " " +
+        doc.category.map((cat) => cat.name).join(", ")
+    );
   });
 
   // B2: Đếm df (document frequency)

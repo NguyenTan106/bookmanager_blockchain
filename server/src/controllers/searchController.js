@@ -14,12 +14,43 @@ const searchBooks = async (req, res) => {
     const total = await getTotalBooks();
     // ✅ Tính TF-IDF
     const tfidfResults = await computeTfIdf(query, total);
+    // console.log(tfidfResults);
     const sorted = tfidfResults.sort((a, b) => b.score - a.score);
 
     res.json(sorted);
   } catch (err) {
     console.error("Lỗi khi tìm kiếm sách:", err);
     res.status(500).json({ error: "Không thể tìm kiếm sách" });
+  }
+};
+
+const sortBooks = async (req, res) => {
+  const { field = "title", order = "asc" } = req.query;
+
+  try {
+    const books = await getTotalBooks();
+
+    const sorted = books.sort((a, b) => {
+      const valA = a[field];
+      const valB = b[field];
+
+      if (typeof valA === "number" && typeof valB === "number") {
+        return order === "asc" ? valA - valB : valB - valA;
+      }
+      if (order === "origin") {
+        return books;
+      }
+
+      // default string compare
+      return order === "asc"
+        ? String(valA).localeCompare(String(valB))
+        : String(valB).localeCompare(String(valA));
+    });
+
+    res.json(sorted);
+  } catch (err) {
+    console.error("❌ Lỗi khi sắp xếp sách:", err);
+    res.status(500).json({ error: "Không thể sắp xếp sách" });
   }
 };
 
@@ -66,4 +97,4 @@ const getTotalBooks = async () => {
   }
 };
 
-module.exports = { getTotalBooks, searchBooks };
+module.exports = { getTotalBooks, searchBooks, sortBooks };

@@ -12,6 +12,12 @@ export default function EditBookPopup({
   categories,
   isMulti,
 }) {
+  useEffect(() => {
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = "auto";
+    };
+  }, []);
   return (
     <div
       style={{

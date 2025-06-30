@@ -24,6 +24,12 @@ export default function BookDetailPopup({
   const [categoryMap, setCategoryMap] = useState({});
 
   useEffect(() => {
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = "auto";
+    };
+  }, []);
+  useEffect(() => {
     const loadCategories = async () => {
       try {
         const data = await fetchCategories(); // [{ id, name }]

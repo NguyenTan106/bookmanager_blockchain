@@ -4,7 +4,6 @@ import { Row, Button, Col, Badge, Form } from "react-bootstrap";
 import BookDetailPopup from "./BookDetailPopup";
 import BookAuthor from "./BookAuthor";
 import EditBookPopup from "./EditBookPopup";
-import SearchPage from "./SearchPage";
 import { fetchCategories } from "../services/categoryApi";
 export default function BookList({
   books,
@@ -19,6 +18,7 @@ export default function BookList({
   userRole,
   handleRevoke,
   bookContract,
+  hasBorrowed,
 }) {
   const [editingBook, setEditingBook] = useState(null); // sách đang sửa
   const [editForm, setEditForm] = useState({
@@ -133,12 +133,6 @@ export default function BookList({
     }
   };
 
-  const hasBorrowed = (book) => {
-    return book.borrows?.some(
-      (b) => b.borrower.toLowerCase() === account.toLowerCase()
-    );
-  };
-
   // Tính tổng số trang
   const totalPages = Math.ceil(books.length / itemsPerPage);
 
@@ -157,8 +151,6 @@ export default function BookList({
 
   return (
     <>
-      <h3>Book List</h3>
-      <hr />
       <Row>
         {books.length === 0 ? (
           <p>No books yet.</p>

@@ -12,10 +12,19 @@ import SetUserName from "./components/SetUserName";
 import { TabContext, TabList, TabPanel } from "@mui/lab";
 import Tab from "@mui/material/Tab";
 import Box from "@mui/material/Box";
-import { Container, Row, Col } from "react-bootstrap";
+import {
+  Container,
+  Row,
+  Col,
+  Button,
+  DropdownButton,
+  Dropdown,
+} from "react-bootstrap";
 import { uploadImageToBackend, uploadPDFToBackend } from "./services/ipfsAPI"; // Import các hàm upload từ backend
 import { fetchBooks } from "./services/bookApi"; // Import hàm lấy sách từ API
-import { searchBooks } from "./services/searchApi";
+import BookListTableView from "./components/BookListTableView";
+import { sortBooks } from "./services/bookApi";
+import { FaTable, FaThLarge, FaUndo } from "react-icons/fa";
 function App() {
   const [account, setAccount] = useState("");
   const [bookContract, setBookContract] = useState(null);
@@ -34,11 +43,37 @@ function App() {
   const [userRole, setUserRole] = useState(null); // state để lưu vai trò người dùng
   const [username, setUsername] = useState("");
   const [currentUsername, setCurrentUsername] = useState("");
-  const isRequesting = useRef(false); // tránh gọi trùng
+  const [sortOption, setSortOption] = useState({
+    sortBy: "origin",
+    sortOrder: "origin",
+  });
+  const [viewMode, setViewMode] = useState("card");
 
   useEffect(() => {
     loadBlockchain();
   }, []);
+
+  const sortManage = async () => {
+    const storedSort = localStorage.getItem("sortSettings");
+    const storedView = localStorage.getItem("viewMode");
+
+    if (storedSort) {
+      const { sortBy, sortOrder } = JSON.parse(storedSort);
+      // console.log(sortBy);
+      setSortOption({ sortBy, sortOrder });
+
+      // gọi API với sortBy & sortOrder
+      const result = await sortBooks(sortBy, sortOrder);
+      console.log(result);
+      setBooks(result);
+    }
+
+    if (storedView) setViewMode(storedView);
+  };
+  useEffect(() => {
+    sortManage();
+  }, []);
+
   useEffect(() => {
     const checkRole = async () => {
       if (bookContract && account) {
@@ -62,8 +97,6 @@ function App() {
 
   // Hàm loadBlockchain để kết nối với MetaMask và lấy thông tin blockchain
   const loadBlockchain = async () => {
-    if (isRequesting.current) return; // đã đang gọi rồi
-    isRequesting.current = true;
     try {
       if (window.ethereum) {
         const web3 = new Web3(window.ethereum);
@@ -71,7 +104,7 @@ function App() {
           method: "eth_requestAccounts",
         });
 
-        if (existAcc && existAcc.length === 0) {
+        if (!existAcc || existAcc.length === 0) {
           alert("Vui lòng kết nối tài khoản Ethereum trong MetaMask.");
           return;
         } else {
@@ -102,8 +135,6 @@ function App() {
       } else {
         console.error("Lỗi khi load blockchain:", error);
       }
-    } finally {
-      isRequesting.current = false;
     }
   };
 
@@ -319,6 +350,27 @@ function App() {
     }
   };
 
+  const hasBorrowed = (book) => {
+    return book.borrows?.some(
+      (b) => b.borrower.toLowerCase() === account.toLowerCase()
+    );
+  };
+
+  const handleSortChange = async (sortBy, sortOrder) => {
+    const sortState = { sortBy, sortOrder };
+    localStorage.setItem("sortSettings", JSON.stringify(sortState));
+    setSortOption(sortState); // set state nếu bạn dùng 1 object
+
+    const sorted = await sortBooks(sortBy, sortOrder);
+    // console.log(sorted);
+    setBooks(sorted);
+  };
+
+  const handleViewChange = (mode) => {
+    localStorage.setItem("viewMode", mode); // lưu lại
+    setViewMode(mode);
+  };
+
   return (
     <Container className="mt-4">
       <Row className="justify-content-center">
@@ -370,25 +422,160 @@ function App() {
             </TabList>
           </Box>
           <TabPanel value="1">
-            <SearchPage
-              setBooks={setBooks}
-              books={books}
-              bookContract={bookContract}
-            />
-            <BookList
-              books={books}
-              bookContract={bookContract}
-              account={account}
-              handleBorrow={handleBorrow}
-              handleBuy={handleBuy}
-              handleReturn={handleReturn}
-              handleUpdate={handleUpdate}
-              handleDelete={handleDelete}
-              isAdmin={isAdmin}
-              userRole={userRole}
-              handleRevoke={handleRevoke}
-              hasBought={hasBought}
-            />
+            <Row className="">
+              <Col>
+                <h3 md="auto" className="mb-0">
+                  Book List
+                </h3>
+              </Col>
+              <Col className="p-0">
+                <SearchPage
+                  setBooks={setBooks}
+                  books={books}
+                  bookContract={bookContract}
+                />
+              </Col>
+              <Col xs lg="2" className="p-0" style={{ textAlign: "right" }}>
+                <DropdownButton
+                  className=""
+                  id="dropdown-basic-button"
+                  title="Sắp xếp theo giá"
+                  variant="outline-dark"
+                >
+                  <Dropdown.Item
+                    onClick={async () => {
+                      const sorted = await sortBooks("", "origin");
+                      setBooks(sorted);
+                    }}
+                    href="#/action-0"
+                  >
+                    <FaUndo className="me-2" /> {/* Icon undo */}
+                    Ban đầu
+                  </Dropdown.Item>
+                  <Dropdown.Item
+                    // onClick={async () => {
+                    //   const sorted = await sortBooks("price", "asc"); // hoặc "desc"
+                    //   setBooks(sorted);
+                    // }}
+                    onClick={() => handleSortChange("asc")}
+                    href="#/action-1"
+                  >
+                    🔼 Tăng dần
+                  </Dropdown.Item>
+                  <Dropdown.Item
+                    onClick={async () => {
+                      const sorted = await sortBooks("price", "dsc"); // hoặc "desc"
+                      setBooks(sorted);
+                    }}
+                    href="#/action-2"
+                  >
+                    🔽 Giảm dần
+                  </Dropdown.Item>
+                </DropdownButton>
+              </Col>
+              <Col xs lg="2">
+                <DropdownButton
+                  className=""
+                  id="dropdown-basic-button"
+                  title="Sắp xếp theo tên"
+                  variant="outline-dark"
+                >
+                  <Dropdown.Item
+                    onClick={async () => {
+                      const sorted = await sortBooks("", "origin");
+                      setBooks(sorted);
+                    }}
+                    href="#/action-0"
+                  >
+                    <FaUndo className="me-2" /> {/* Icon undo */}
+                    Ban đầu
+                  </Dropdown.Item>
+                  <Dropdown.Item
+                    // onClick={async () => {
+                    //   const sorted = await sortBooks("title", "asc"); // hoặc "desc"
+                    //   setBooks(sorted);
+                    // }}
+                    onClick={() => handleSortChange("title", "asc")}
+                    href="#/action-1"
+                  >
+                    🔼 Tăng dần
+                  </Dropdown.Item>
+                  <Dropdown.Item
+                    // onClick={async () => {
+                    //   const sorted = await sortBooks("title", "desc"); // hoặc "desc"
+                    //   setBooks(sorted);
+                    // }}
+                    onClick={() => handleSortChange("title", "desc")}
+                    href="#/action-2"
+                  >
+                    🔽 Giảm dần
+                  </Dropdown.Item>
+                </DropdownButton>
+              </Col>
+              <Col md="auto" className="p-0">
+                <Button
+                  variant={viewMode === "table" ? "dark" : "outline-secondary"}
+                  onClick={() => handleViewChange("table")}
+                  style={{
+                    borderRadius: "8px",
+                    padding: "5px 12px 8px 12px",
+                    boxShadow: viewMode === "table" ? "0 0 5px #666" : "none",
+                    transition: "all 0.2s",
+                  }}
+                >
+                  <FaTable size={18} />
+                </Button>
+              </Col>
+              <Col md="auto">
+                <Button
+                  variant={viewMode === "card" ? "dark" : "outline-secondary"}
+                  onClick={() => handleViewChange("card")}
+                  style={{
+                    borderRadius: "8px",
+                    padding: "5px 12px 8px 12px",
+                    boxShadow: viewMode === "card" ? "0 0 5px #666" : "none",
+                    transition: "all 0.2s",
+                  }}
+                >
+                  <FaThLarge size={18} />
+                </Button>
+              </Col>
+            </Row>
+
+            <hr />
+            {viewMode === "card" ? (
+              <BookList
+                books={books}
+                bookContract={bookContract}
+                account={account}
+                handleBorrow={handleBorrow}
+                handleBuy={handleBuy}
+                handleReturn={handleReturn}
+                handleUpdate={handleUpdate}
+                handleDelete={handleDelete}
+                isAdmin={isAdmin}
+                userRole={userRole}
+                handleRevoke={handleRevoke}
+                hasBought={hasBought}
+                hasBorrowed={hasBorrowed}
+              />
+            ) : (
+              <BookListTableView
+                books={books}
+                bookContract={bookContract}
+                account={account}
+                handleBorrow={handleBorrow}
+                handleBuy={handleBuy}
+                handleReturn={handleReturn}
+                handleUpdate={handleUpdate}
+                handleDelete={handleDelete}
+                isAdmin={isAdmin}
+                userRole={userRole}
+                handleRevoke={handleRevoke}
+                hasBought={hasBought}
+                hasBorrowed={hasBorrowed}
+              />
+            )}
           </TabPanel>
           <TabPanel value="2">
             <EventLogs
