@@ -168,7 +168,7 @@ function App() {
       const classifySettings = localStorage.getItem("classifySettings");
 
       // Ưu tiên phân loại nếu có
-      if (classifySettings !== " " && !sortSettings) {
+      if (classifySettings !== " " && classifySettings && !sortSettings) {
         const classified = await classifyBooks(classifySettings);
         setSelectedCategoryLabel(classifySettings);
         setBooks(classified);
@@ -510,7 +510,7 @@ function App() {
                   </Dropdown.Item>
                 </DropdownButton>
               </Col>
-              <Col xs lg="2">
+              <Col sm="auto" style={{ textAlign: "right" }}>
                 <DropdownButton
                   className=""
                   id="dropdown-basic-button"
@@ -538,7 +538,7 @@ function App() {
                   </Dropdown.Item>
                 </DropdownButton>
               </Col>
-              <Col xs>
+              <Col sm="auto" className="" style={{ textAlign: "right" }}>
                 <DropdownButton
                   className=""
                   id="dropdown-basic-button"
@@ -630,6 +630,7 @@ function App() {
                 handleRevoke={handleRevoke}
                 hasBought={hasBought}
                 hasBorrowed={hasBorrowed}
+                isSuperAdmin={isSuperAdmin}
               />
             )}
             {viewMode === "card" && isAdmin && (
@@ -648,6 +649,7 @@ function App() {
                 hasBorrowed={hasBorrowed}
                 setUsername={setUsername}
                 username={username}
+                isSuperAdmin={isSuperAdmin}
               />
             )}
             {isAdmin && viewMode === "table" && (
@@ -664,6 +666,7 @@ function App() {
                 handleRevoke={handleRevoke}
                 hasBought={hasBought}
                 hasBorrowed={hasBorrowed}
+                isSuperAdmin={isSuperAdmin}
               />
             )}
           </TabPanel>

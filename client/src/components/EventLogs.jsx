@@ -85,7 +85,12 @@ export default function EventLogs({
             if (isGrantOrRevoke) return false;
 
             // Admin thấy chính mình hoặc người dùng (không phải admin)
-            return performer || borrower || buyer || owner === account;
+            return (
+              performer?.toLowerCase() === account?.toLowerCase() ||
+              borrower ||
+              buyer ||
+              owner?.toLowerCase() === account?.toLowerCase()
+            );
           }
 
           // Nếu là user: chỉ thấy chính mình (performer hoặc borrower)
@@ -95,10 +100,14 @@ export default function EventLogs({
             "BookRevoked",
             "BookPurchased",
           ];
-          return (
-            userVisibleEvents.includes(event) &&
-            (performer === account || borrower === account || buyer === account)
-          );
+
+          if (isAdmin === false)
+            return (
+              userVisibleEvents.includes(event) &&
+              (performer?.toLowerCase() === account?.toLowerCase() ||
+                borrower?.toLowerCase() === account?.toLowerCase() ||
+                buyer?.toLowerCase() === account?.toLowerCase())
+            );
         });
 
         filteredLogs.sort(

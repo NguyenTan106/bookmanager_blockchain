@@ -119,9 +119,9 @@ const computeTfIdfClassify = async (query, documents) => {
   // console.log(totalDocs);
   // B1: Tokenize toàn bộ tài liệu
   const docsTokens = documents.map((doc) => {
-    console.log(
-      tokenize_category(doc.category.map((cat) => cat.name).join(", "))
-    );
+    // console.log(
+    //   tokenize_category(doc.category.map((cat) => cat.name).join(", "))
+    // );
     return tokenize_category(doc.category.map((cat) => cat.name).join(", "));
   });
 

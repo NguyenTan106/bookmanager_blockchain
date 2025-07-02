@@ -22,6 +22,7 @@ export default function BookList({
   hasBorrowed,
   username,
   setUserName,
+  isSuperAdmin,
 }) {
   const [editingBook, setEditingBook] = useState(null); // sách đang sửa
   const [editForm, setEditForm] = useState({
@@ -305,17 +306,18 @@ export default function BookList({
           ))
         )}
         {totalPages > 1 && (
-          <div className="d-flex justify-content-center align-items-center mt-4">
+          <div className="d-flex justify-content-center align-items-center flex-wrap gap-2 mt-4">
             <Button
-              variant="outline-primary"
+              variant="outline-secondary"
               onClick={() => handlePageChange(currentPage - 1)}
               disabled={currentPage === 1}
-              className="me-2"
+              className="rounded-pill px-3 fw-semibold shadow-sm hover-shadow transition-all"
+              style={{ minWidth: "80px" }}
             >
-              <FaAngleLeft /> Trước
+              <FaAngleLeft className="me-1" />
+              Trước
             </Button>
 
-            {/* Trang hiện tại và xung quanh */}
             {[...Array(totalPages)].map((_, i) => {
               const pageNum = i + 1;
               if (
@@ -327,10 +329,13 @@ export default function BookList({
                   <Button
                     key={pageNum}
                     variant={
-                      pageNum === currentPage ? "primary" : "outline-primary"
+                      pageNum === currentPage
+                        ? "secondary"
+                        : "outline-secondary"
                     }
                     onClick={() => handlePageChange(pageNum)}
-                    className="mx-1"
+                    className="rounded-circle fw-semibold"
+                    style={{ width: "40px", height: "40px" }}
                   >
                     {pageNum}
                   </Button>
@@ -340,21 +345,25 @@ export default function BookList({
                 (pageNum === currentPage + 2 && currentPage < totalPages - 2)
               ) {
                 return (
-                  <span key={pageNum} className="mx-1 text-muted">
+                  <span
+                    key={pageNum}
+                    className="text-secondary mx-2"
+                    style={{ fontWeight: "bold" }}
+                  >
                     ...
                   </span>
                 );
               }
               return null;
             })}
-
             <Button
-              variant="outline-primary"
+              variant="outline-secondary"
               onClick={() => handlePageChange(currentPage + 1)}
               disabled={currentPage === totalPages}
-              className="ms-2"
+              className="rounded-pill px-3 fw-semibold shadow-sm hover-shadow transition-all"
+              style={{ minWidth: "80px" }}
             >
-              Sau <FaAngleRight />
+              Sau <FaAngleRight className="ms-1" />
             </Button>
           </div>
         )}
@@ -414,6 +423,7 @@ export default function BookList({
           hasBorrowed={hasBorrowed}
           hasBought={hasBought}
           isAdmin={isAdmin}
+          isSuperAdmin={isSuperAdmin}
           userRole={userRole}
           handleBorrow={handleBorrow}
           handleUpdate={(book) => {

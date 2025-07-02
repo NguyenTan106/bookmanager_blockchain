@@ -8,6 +8,7 @@ export default function BookDetailPopup({
   book,
   onClose,
   isAdmin,
+  isSuperAdmin,
   handleUpdate,
   handleDelete,
   handleRevokeUser,
@@ -103,7 +104,16 @@ export default function BookDetailPopup({
               />
             </>
           )}
-          {isAdmin && (
+          {isAdmin && !isSuperAdmin && (
+            <>
+              <strong>Tác giả:</strong>
+              <BookAuthor
+                owner={book.performedBy}
+                bookContract={bookContract}
+              />
+            </>
+          )}
+          {isSuperAdmin && (
             <>
               <strong>Tác giả:</strong> {book.owner}
             </>
