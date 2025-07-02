@@ -8,7 +8,6 @@ contract BorrowManager is BookLibrary {
     event BookPurchased(uint indexed id, address indexed buyer, uint price);
     event BookReturned(uint id, string title, address performedBy);
 
-    mapping(uint => mapping(address => bool)) public bookPurchases;
 
     function buyBook(uint _id) public payable {
         require(_id < nextId, "Book does not exist");
@@ -28,6 +27,7 @@ contract BorrowManager is BookLibrary {
     }
 
 
+    mapping(uint => mapping(address => bool)) public bookPurchases;
     function hasPurchasedBooks(address user) public view returns (bool) {
         for (uint i = 0; i < nextId; i++) {
             if (bookPurchases[i][user]) {
@@ -35,6 +35,10 @@ contract BorrowManager is BookLibrary {
             }
         }
         return false;
+    }
+
+    function hasPurchased(uint bookId, address user) public view returns (bool) {
+        return bookPurchases[bookId][user];
     }
 
     function borrowBook(uint _id, uint durationDays) public payable {
@@ -70,7 +74,7 @@ contract BorrowManager is BookLibrary {
         return false;
     }
 
-        function revokeBook(uint bookId) public onlyAdmin {
+    function revokeBook(uint bookId) public onlyAdmin {
         require(bookId < nextId, "Book does not exist");
         require(books[bookId].status == BookStatus.Borrowed, "Book is not borrowed");
 

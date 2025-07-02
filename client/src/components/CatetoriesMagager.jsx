@@ -22,8 +22,9 @@ const CategoryManagerModal = ({
   value,
   onChange,
   loadBooks,
+  categories,
+  setCategories,
 }) => {
-  const [categories, setCategories] = useState([]);
   const [newCategory, setNewCategory] = useState("");
 
   const loadCategories = async () => {

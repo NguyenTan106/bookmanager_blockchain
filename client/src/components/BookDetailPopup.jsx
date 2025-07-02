@@ -8,8 +8,6 @@ export default function BookDetailPopup({
   book,
   onClose,
   isAdmin,
-  userRole,
-  handleBorrow,
   handleUpdate,
   handleDelete,
   handleRevokeUser,
@@ -17,6 +15,8 @@ export default function BookDetailPopup({
   hasBorrowed,
   bookContract,
   handleOpenEdit,
+  account,
+  handleReturn,
 }) {
   const [showBorrowers, setShowBorrowers] = useState(false);
   const [showBuyers, setShowBuyers] = useState(false);
@@ -94,7 +94,7 @@ export default function BookDetailPopup({
           <strong>Tiêu đề:</strong> {book.title}
         </p>
         <p>
-          {userRole === "user" && (
+          {!isAdmin && (
             <>
               <strong>Tác giả:</strong>
               <BookAuthor
@@ -118,12 +118,18 @@ export default function BookDetailPopup({
           ))}
           {/* {book.category.map((cat) => cat.name).join(", ")} */}
         </p>
-        <p>
-          <strong>IPFS:</strong> {book.ipfsHash}
-        </p>
-        <p>
-          <strong>CoverImage:</strong> {book.coverImageHash}
-        </p>
+        {isAdmin ||
+          (book.hasPurchased && (
+            <>
+              <p>
+                <strong>IPFS:</strong> {book.ipfsHash}
+              </p>
+              <p>
+                <strong>CoverImage:</strong> {book.coverImageHash}
+              </p>
+            </>
+          ))}
+
         <p>
           <strong>Description:</strong> {book.description}
         </p>
@@ -147,8 +153,8 @@ export default function BookDetailPopup({
                 label = "Borrowed";
                 variant = "warning";
               }
-            } else if (book.hasBought) {
-              label = "Đã mua";
+            } else if (book.hasPurchased) {
+              label = "Purchased";
               variant = "info";
             } else if (hasBorrowed(book)) {
               label = "Borrowed";
@@ -186,7 +192,7 @@ export default function BookDetailPopup({
           </>
         )}
 
-        {book.hasBought && (
+        {book.hasPurchased && (
           <>
             <a
               href={`https://ipfs.io/ipfs/${book.ipfsHash}`}
@@ -217,8 +223,38 @@ export default function BookDetailPopup({
           </div>
         )}
 
-        {userRole === "user" && !book.hasBought && (
-          <Button onClick={() => handleBorrow(book.id)}>📥 Mượn</Button>
+        {hasBorrowed(book) && (
+          <>
+            <Button
+              className="mt-1"
+              variant="secondary"
+              onClick={(e) => {
+                e.stopPropagation();
+                setSelectedPDF(book.ipfsHash);
+                setShowFullPDF(true);
+              }}
+            >
+              🔍 Phóng to PDF
+            </Button>
+            <div></div>
+            <Button
+              className="mt-2"
+              onClick={async () => {
+                await handleReturn(book.id); // Gọi hàm xử lý trả sách
+                setSelectedBook(null); // Reset sách đang chọn
+              }}
+            >
+              🔄 Trả sách
+            </Button>
+            <div className="mt-1">
+              📅 Hết hạn:{" "}
+              <u>
+                {book.borrows.find(
+                  (b) => b.borrower.toLowerCase() === account.toLowerCase()
+                )?.returnDate || 0}
+              </u>
+            </div>
+          </>
         )}
 
         <div style={{ marginTop: 10 }}>
@@ -304,7 +340,7 @@ export default function BookDetailPopup({
         <Button
           variant="secondary"
           onClick={onClose}
-          style={{ marginTop: "15px" }}
+          style={{ marginTop: "5px" }}
         >
           ❌ Đóng
         </Button>

@@ -1,29 +1,42 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { searchBooks } from "../services/searchApi";
 import { Container, Form, Button, Spinner } from "react-bootstrap";
-import BookAuthor from "./BookAuthor";
-import BookList from "./BookList";
-export default function SearchPage({ setBooks, books, bookContract }) {
+import { fetchBooks } from "../services/bookApi";
+export default function SearchPage({
+  setBooks,
+  books,
+  bookContract,
+  account,
+  loadBooks,
+}) {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
+  const firstLoad = useRef(true); // 👈 ref để tránh gọi khi vừa load trang
 
-  // ⏱ Debounce timer
   useEffect(() => {
-    const delayDebounce = setTimeout(() => {
+    const delayDebounce = setTimeout(async () => {
+      if (firstLoad.current) {
+        firstLoad.current = false;
+        return; // ❌ Bỏ qua lần đầu
+      }
+
       if (query.trim() !== "") {
         handleSearch(query);
+      } else {
+        setResults([]);
+        await loadBooks(); // ✅ Chỉ gọi khi người dùng xóa truy vấn
       }
-    }, 100); // ⏳ 500ms sau khi gõ xong mới tìm
+    }, 100); // bạn có thể để 300ms cho mượt
 
-    return () => clearTimeout(delayDebounce); // ❌ Clear timeout nếu user vẫn đang gõ
+    return () => clearTimeout(delayDebounce);
   }, [query]);
 
   const handleSearch = async (e) => {
     setLoading(true);
 
     try {
-      const res = await searchBooks(query);
+      const res = await searchBooks(query, account);
       // console.log(res);
       setResults(res);
       setBooks(res);

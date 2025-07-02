@@ -7,7 +7,6 @@ import AdminManagement from "./components/AdminManagement";
 import BookList from "./components/BookList";
 import SearchPage from "./components/SearchPage";
 import EventLogs from "./components/EventLogs";
-import { getUserRole } from "./components/GetUserRoles";
 import SetUserName from "./components/SetUserName";
 import { TabContext, TabList, TabPanel } from "@mui/lab";
 import Tab from "@mui/material/Tab";
@@ -25,10 +24,15 @@ import { fetchBooks } from "./services/bookApi"; // Import hàm lấy sách từ
 import BookListTableView from "./components/BookListTableView";
 import { sortBooks } from "./services/bookApi";
 import { FaTable, FaThLarge, FaUndo } from "react-icons/fa";
+import { classifyBooks } from "./services/searchApi";
 function App() {
   const [account, setAccount] = useState("");
   const [bookContract, setBookContract] = useState(null);
+  const [categories, setCategories] = useState([]);
   const [books, setBooks] = useState([]);
+  const [selectedCategoryLabel, setSelectedCategoryLabel] =
+    useState("Phân loại");
+
   const [form, setForm] = useState({
     title: "",
     price: "",
@@ -40,13 +44,13 @@ function App() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [value, setValue] = useState("1");
   const [isSuperAdmin, setIsSuperAdmin] = useState(false);
-  const [userRole, setUserRole] = useState(null); // state để lưu vai trò người dùng
   const [username, setUsername] = useState("");
   const [currentUsername, setCurrentUsername] = useState("");
   const [sortOption, setSortOption] = useState({
     sortBy: "origin",
     sortOrder: "origin",
   });
+  const [classifyOption, setClassifyOption] = useState("");
   const [viewMode, setViewMode] = useState("card");
 
   useEffect(() => {
@@ -57,66 +61,93 @@ function App() {
   //   const checkRole = async () => {
   //     if (bookContract && account) {
   //       const role = await getUserRole(bookContract, account);
-  //       console.log(role);
+  //       // console.log(role);
   //       setUserRole(role); // set state
+  //       if (role === "user") {
+  //         const delayLoadBooks = async () => {
+  //           // Delay nhỏ (500ms - 2s) để node kịp cập nhật contract
+  //           await new Promise((resolve) => setTimeout(resolve, 700));
+  //           if (bookContract && account) {
+  //             await loadBooks(bookContract);
+  //           }
+  //         };
+  //         delayLoadBooks();
+  //       }
   //     }
   //   };
   //   checkRole();
   // }, [bookContract, account]);
-
   useEffect(() => {
-    const checkRole = async () => {
+    const delayLoadBooks = async () => {
+      // Delay nhỏ (500ms - 2s) để node kịp cập nhật contract
+      await new Promise((resolve) => setTimeout(resolve, 1000));
       if (bookContract && account) {
-        const role = await getUserRole(bookContract, account);
-        // console.log(role);
-        setUserRole(role); // set state
-        if (role === "user") {
-          const delayLoadBooks = async () => {
-            // Delay nhỏ (500ms - 2s) để node kịp cập nhật contract
-            await new Promise((resolve) => setTimeout(resolve, 700));
-            if (bookContract && account) {
-              await loadBooks(bookContract);
-            }
-          };
-          delayLoadBooks();
-        }
+        await loadBooks(bookContract);
       }
     };
-    checkRole();
+    delayLoadBooks();
   }, [bookContract, account]);
 
-  // Hàm loadBlockchain để kết nối với MetaMask và lấy thông tin blockchain
+  useEffect(() => {
+    if (window.ethereum) {
+      window.ethereum.on("accountsChanged", (accounts) => {
+        if (accounts.length > 0) {
+          setAccount(accounts[0]);
+
+          // 👉 Xoá toàn bộ localStorage (hoặc chỉ các key liên quan nếu muốn)
+          localStorage.clear();
+
+          // Optionally: reload lại trang hoặc load dữ liệu mới
+          window.location.reload();
+        }
+      });
+    }
+  }, []);
+
+  let isLoading = false;
   const loadBlockchain = async () => {
+    if (isLoading || account) return; // ⛔ Đã có account thì không gọi lại
+    isLoading = true;
+
     try {
-      if (window.ethereum) {
-        const web3 = new Web3(window.ethereum);
-        const existAcc = await window.ethereum.request({
+      if (!window.ethereum) {
+        alert("Vui lòng cài đặt MetaMask.");
+        return;
+      }
+
+      const web3 = new Web3(window.ethereum);
+
+      // 🔍 Kiểm tra xem đã có tài khoản được kết nối chưa (không bật popup)
+      const existingAccounts = await window.ethereum.request({
+        method: "eth_accounts",
+      });
+
+      if (!existingAccounts || existingAccounts.length === 0) {
+        // 👇 Nếu chưa có, yêu cầu người dùng kết nối (popup)
+        const requested = await window.ethereum.request({
           method: "eth_requestAccounts",
         });
 
-        if (!existAcc || existAcc.length === 0) {
-          alert("Vui lòng kết nối tài khoản Ethereum trong MetaMask.");
+        if (!requested || requested.length === 0) {
+          alert("❌ Không có tài khoản nào được kết nối.");
           return;
-        } else {
-          const accounts = await web3.eth.getAccounts();
-          setAccount(accounts[0]);
         }
 
-        const networkId = await web3.eth.net.getId();
-        const deployed = BookManager.networks[networkId];
-
-        if (deployed) {
-          const contract = new web3.eth.Contract(
-            BookManager.abi,
-            deployed.address
-          );
-          setBookContract(contract);
-        } else {
-          alert("Contract not deployed to detected network");
-        }
+        setAccount(requested[0]);
       } else {
-        alert("Please install MetaMask");
+        setAccount(existingAccounts[0]);
       }
+
+      const networkId = await web3.eth.net.getId();
+      const deployed = BookManager.networks[networkId];
+
+      if (!deployed) {
+        alert("⚠️ Contract chưa được deploy trên mạng hiện tại.");
+        return;
+      }
+
+      const contract = new web3.eth.Contract(BookManager.abi, deployed.address);
+      setBookContract(contract);
     } catch (error) {
       if (error.code === -32002) {
         alert("MetaMask đang xử lý yêu cầu. Vui lòng chờ hoặc kiểm tra popup.");
@@ -125,42 +156,34 @@ function App() {
       } else {
         console.error("Lỗi khi load blockchain:", error);
       }
+    } finally {
+      isLoading = false;
     }
-  };
-  const sortManage = async () => {
-    // const storedView = localStorage.getItem("viewMode");
-    const storedSort = localStorage.getItem("sortSettings");
-    if (storedSort) {
-      const { sortBy, sortOrder } = JSON.parse(storedSort);
-      // console.log(sortBy);
-      setSortOption({ sortBy, sortOrder });
-
-      // gọi API với sortBy & sortOrder
-      const result = await sortBooks(sortBy, sortOrder);
-      // console.log(result);
-      setBooks(result);
-    }
-    // if (storedView) setViewMode(storedView);
   };
 
   const loadBooks = async () => {
     try {
-      console.log(userRole);
-      if (userRole != "admin" || userRole != "super") {
-        const result = await fetchBooks();
-        const updatedBooks = await Promise.all(
-          result.map(async (book) => {
-            const bought = await hasBought(book.id);
-            return { ...book, hasBought: bought };
-          })
-        );
+      const storedView = localStorage.getItem("viewMode");
+      const sortSettings = localStorage.getItem("sortSettings");
+      const classifySettings = localStorage.getItem("classifySettings");
 
-        console.log(updatedBooks);
-        setBooks(updatedBooks);
-        sortManage();
+      // Ưu tiên phân loại nếu có
+      if (classifySettings !== " " && !sortSettings) {
+        const classified = await classifyBooks(classifySettings);
+        setSelectedCategoryLabel(classifySettings);
+        setBooks(classified);
+      } else if (sortSettings && !classifySettings) {
+        const { sortBy, sortOrder } = JSON.parse(sortSettings);
+        const sorted = await sortBooks(sortBy, sortOrder, account);
+        localStorage.removeItem("classifySettings");
+        setBooks(sorted);
       } else {
-        sortManage();
+        // Mặc định: tải toàn bộ sách
+        const result = await fetchBooks(account);
+        setBooks(result);
       }
+
+      if (storedView) setViewMode(storedView);
     } catch (error) {
       console.error("❌ Lỗi khi tải sách:", error);
       return [];
@@ -368,19 +391,31 @@ function App() {
     );
   };
 
-  const handleSortChange = async (sortBy, sortOrder) => {
+  const handleSortChange = async (sortBy, sortOrder, account) => {
     const sortState = { sortBy, sortOrder };
     localStorage.setItem("sortSettings", JSON.stringify(sortState));
     setSortOption(sortState); // set state nếu bạn dùng 1 object
 
-    const sorted = await sortBooks(sortBy, sortOrder);
+    const sorted = await sortBooks(sortBy, sortOrder, account);
     // console.log(sorted);
+    localStorage.removeItem("classifySettings");
+
     setBooks(sorted);
   };
 
   const handleViewChange = (mode) => {
     localStorage.setItem("viewMode", mode); // lưu lại
     setViewMode(mode);
+  };
+
+  const handleClassify = async (query, account) => {
+    localStorage.setItem("classifySettings", query);
+    setClassifyOption(query);
+
+    const classify = await classifyBooks(query, account);
+    localStorage.removeItem("sortSettings");
+
+    setBooks(classify);
   };
 
   return (
@@ -392,11 +427,7 @@ function App() {
             <strong>Logged in:</strong> {account}
             <p className="mt-1">
               🔐 Vai trò:{" "}
-              {userRole === "super"
-                ? "Super Admin"
-                : userRole === "admin"
-                ? "Admin"
-                : "User"}
+              {isSuperAdmin ? "Super Admin" : isAdmin ? "Admin" : "User"}
             </p>
           </div>
           <SetUserName
@@ -421,6 +452,8 @@ function App() {
             loadBooks={loadBooks}
             hasBought={hasBought}
             books={books}
+            setCategories={setCategories}
+            categories={categories}
           />
         </div>
 
@@ -445,6 +478,8 @@ function App() {
                   setBooks={setBooks}
                   books={books}
                   bookContract={bookContract}
+                  account={account}
+                  loadBooks={loadBooks}
                 />
               </Col>
               <Col xs lg="2" className="p-0" style={{ textAlign: "right" }}>
@@ -455,20 +490,20 @@ function App() {
                   variant="outline-dark"
                 >
                   <Dropdown.Item
-                    onClick={() => handleSortChange("", "origin")}
+                    onClick={() => handleSortChange("", "origin", account)}
                     href="#/action-0"
                   >
                     <FaUndo className="me-2" /> {/* Icon undo */}
                     Ban đầu
                   </Dropdown.Item>
                   <Dropdown.Item
-                    onClick={() => handleSortChange("price", "asc")}
+                    onClick={() => handleSortChange("price", "asc", account)}
                     href="#/action-1"
                   >
                     🔼 Tăng dần
                   </Dropdown.Item>
                   <Dropdown.Item
-                    onClick={() => handleSortChange("price", "desc")}
+                    onClick={() => handleSortChange("price", "desc", account)}
                     href="#/action-2"
                   >
                     🔽 Giảm dần
@@ -483,73 +518,105 @@ function App() {
                   variant="outline-dark"
                 >
                   <Dropdown.Item
-                    onClick={() => handleSortChange("", "origin")}
+                    onClick={() => handleSortChange("", "origin", account)}
                     href="#/action-0"
                   >
                     <FaUndo className="me-2" /> {/* Icon undo */}
                     Ban đầu
                   </Dropdown.Item>
                   <Dropdown.Item
-                    onClick={() => handleSortChange("title", "asc")}
+                    onClick={() => handleSortChange("title", "asc", account)}
                     href="#/action-1"
                   >
                     🔼 Tăng dần
                   </Dropdown.Item>
                   <Dropdown.Item
-                    onClick={() => handleSortChange("title", "desc")}
+                    onClick={() => handleSortChange("title", "desc", account)}
                     href="#/action-2"
                   >
                     🔽 Giảm dần
                   </Dropdown.Item>
                 </DropdownButton>
               </Col>
-              <Col md="auto" className="p-0">
-                <Button
-                  variant={viewMode === "table" ? "dark" : "outline-secondary"}
-                  onClick={() => handleViewChange("table")}
-                  style={{
-                    borderRadius: "8px",
-                    padding: "5px 12px 8px 12px",
-                    boxShadow: viewMode === "table" ? "0 0 5px #666" : "none",
-                    transition: "all 0.2s",
-                  }}
+              <Col xs>
+                <DropdownButton
+                  className=""
+                  id="dropdown-basic-button"
+                  title={selectedCategoryLabel}
+                  variant="outline-dark"
                 >
-                  <FaTable size={18} />
-                </Button>
+                  <Dropdown.Item
+                    onClick={() => {
+                      handleClassify(" ", account);
+                      setSelectedCategoryLabel("Phân loại");
+                    }}
+                    href="#/action-0"
+                  >
+                    <FaUndo className="me-2" /> {/* Icon undo */}
+                    Ban đầu
+                  </Dropdown.Item>
+                  {categories.map((cat) => (
+                    <Dropdown.Item
+                      key={cat.id}
+                      onClick={() => {
+                        const hasBooks = books.some((book) =>
+                          book.category?.some?.(
+                            (c) => c === cat.value || c.name === cat.value
+                          )
+                        );
+
+                        if (!hasBooks) {
+                          alert("Không có loại sách này");
+                          return;
+                        }
+                        setSelectedCategoryLabel(cat.label);
+                        handleClassify(cat.value, account);
+                      }}
+                      href="#/action-0"
+                    >
+                      {cat.label}
+                    </Dropdown.Item>
+                  ))}
+                </DropdownButton>
               </Col>
-              <Col md="auto">
-                <Button
-                  variant={viewMode === "card" ? "dark" : "outline-secondary"}
-                  onClick={() => handleViewChange("card")}
-                  style={{
-                    borderRadius: "8px",
-                    padding: "5px 12px 8px 12px",
-                    boxShadow: viewMode === "card" ? "0 0 5px #666" : "none",
-                    transition: "all 0.2s",
-                  }}
-                >
-                  <FaThLarge size={18} />
-                </Button>
-              </Col>
+              {isAdmin && (
+                <Col md="auto" className="p-0">
+                  <Button
+                    variant={
+                      viewMode === "table" ? "dark" : "outline-secondary"
+                    }
+                    onClick={() => handleViewChange("table")}
+                    style={{
+                      borderRadius: "8px",
+                      padding: "5px 12px 8px 12px",
+                      boxShadow: viewMode === "table" ? "0 0 5px #666" : "none",
+                      transition: "all 0.2s",
+                    }}
+                  >
+                    <FaTable size={18} />
+                  </Button>
+                </Col>
+              )}
+              {isAdmin && (
+                <Col md="auto">
+                  <Button
+                    variant={viewMode === "card" ? "dark" : "outline-secondary"}
+                    onClick={() => handleViewChange("card")}
+                    style={{
+                      borderRadius: "8px",
+                      padding: "5px 12px 8px 12px",
+                      boxShadow: viewMode === "card" ? "0 0 5px #666" : "none",
+                      transition: "all 0.2s",
+                    }}
+                  >
+                    <FaThLarge size={18} />
+                  </Button>
+                </Col>
+              )}
             </Row>
 
             <hr />
-            <BookList
-              books={books}
-              bookContract={bookContract}
-              account={account}
-              handleBorrow={handleBorrow}
-              handleBuy={handleBuy}
-              handleReturn={handleReturn}
-              handleUpdate={handleUpdate}
-              handleDelete={handleDelete}
-              isAdmin={isAdmin}
-              userRole={userRole}
-              handleRevoke={handleRevoke}
-              hasBought={hasBought}
-              hasBorrowed={hasBorrowed}
-            />
-            {/* {viewMode === "card" ? (
+            {!isAdmin && (
               <BookList
                 books={books}
                 bookContract={bookContract}
@@ -560,13 +627,30 @@ function App() {
                 handleUpdate={handleUpdate}
                 handleDelete={handleDelete}
                 isAdmin={isAdmin}
-                userRole={userRole}
                 handleRevoke={handleRevoke}
                 hasBought={hasBought}
                 hasBorrowed={hasBorrowed}
-                sortManage={sortManage}
               />
-            ) : (
+            )}
+            {viewMode === "card" && isAdmin && (
+              <BookList
+                books={books}
+                bookContract={bookContract}
+                account={account}
+                handleBorrow={handleBorrow}
+                handleBuy={handleBuy}
+                handleReturn={handleReturn}
+                handleUpdate={handleUpdate}
+                handleDelete={handleDelete}
+                isAdmin={isAdmin}
+                handleRevoke={handleRevoke}
+                hasBought={hasBought}
+                hasBorrowed={hasBorrowed}
+                setUsername={setUsername}
+                username={username}
+              />
+            )}
+            {isAdmin && viewMode === "table" && (
               <BookListTableView
                 books={books}
                 bookContract={bookContract}
@@ -577,18 +661,17 @@ function App() {
                 handleUpdate={handleUpdate}
                 handleDelete={handleDelete}
                 isAdmin={isAdmin}
-                userRole={userRole}
                 handleRevoke={handleRevoke}
                 hasBought={hasBought}
                 hasBorrowed={hasBorrowed}
-                sortManage={sortManage}
               />
-            )} */}
+            )}
           </TabPanel>
           <TabPanel value="2">
             <EventLogs
               bookContract={bookContract}
-              userRole={userRole}
+              isAdmin={isAdmin}
+              isSuperAdmin={isSuperAdmin}
               contract={bookContract}
               account={account}
             />

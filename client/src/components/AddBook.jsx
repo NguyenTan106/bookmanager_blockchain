@@ -9,6 +9,8 @@ export default function AddBook({
   bookContract,
   account,
   loadBooks,
+  categories,
+  setCategories,
 }) {
   const [pdfFile, setPdfFile] = useState(null);
   const [imageFile, setImageFile] = useState(null);
@@ -138,6 +140,8 @@ export default function AddBook({
                   isMulti={true}
                   onChange={(val) => setForm({ ...form, category: val })}
                   loadBooks={loadBooks}
+                  categories={categories}
+                  setCategories={setCategories}
                 />
                 <Button
                   style={{

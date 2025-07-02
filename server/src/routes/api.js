@@ -1,6 +1,10 @@
 const express = require("express");
 const router = express.Router();
-const { searchBooks, sortBooks } = require("../controllers/searchController");
+const {
+  searchBooks,
+  sortBooks,
+  classifyBooks,
+} = require("../controllers/searchController");
 const { getTotalBooks } = require("../controllers/bookController");
 const { uploadPDF, uploadImage } = require("../controllers/ipfsUpload");
 const {
@@ -8,7 +12,9 @@ const {
   getCategories,
   deleteCategory,
 } = require("../controllers/categoryController");
+const { checkRole } = require("../controllers/checkRoleController");
 const searchBooksService = router.post("/search", searchBooks);
+const classifyBooksService = router.post("/classify", classifyBooks);
 const uploadPDFService = router.post("/upload/pdf", uploadPDF);
 const uploadImageService = router.post("/upload/image", uploadImage);
 const addCategoryService = router.post("/categories/add", addCategory);
@@ -19,6 +25,8 @@ const deleteCategoryService = router.delete(
 );
 const getAllBooksService = router.get("/books", getTotalBooks);
 const sortBooksService = router.get("/books/sort", sortBooks);
+const checkRoleService = router.get("/check-role/:address", checkRole);
+
 module.exports = {
   searchBooksService,
   uploadPDFService,
@@ -28,4 +36,6 @@ module.exports = {
   deleteCategoryService,
   getAllBooksService,
   sortBooksService,
+  checkRoleService,
+  classifyBooksService,
 };

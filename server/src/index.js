@@ -10,6 +10,8 @@ const {
   deleteCategoryService,
   getAllBooksService,
   sortBooksService,
+  checkRoleService,
+  classifyBooksService,
 } = require("./routes/api");
 const multer = require("multer");
 require("dotenv").config();
@@ -29,6 +31,8 @@ app.use("/", getCategoriesService);
 app.use("/", deleteCategoryService);
 app.use("/", getAllBooksService);
 app.use("/", sortBooksService);
+app.use("/", checkRoleService);
+app.use("/", classifyBooksService);
 
 app.listen(PORT, () => {
   console.log(`TF-IDF backend running at http://localhost:${PORT}`);

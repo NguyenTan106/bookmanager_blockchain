@@ -20,6 +20,8 @@ export default function BookList({
   handleRevoke,
   bookContract,
   hasBorrowed,
+  username,
+  setUserName,
 }) {
   const [editingBook, setEditingBook] = useState(null); // sách đang sửa
   const [editForm, setEditForm] = useState({
@@ -156,7 +158,7 @@ export default function BookList({
               className="text-center col-lg-3 col-12 mb-4 book-item"
               bg="Success"
               onClick={() => {
-                if (isAdmin || book.hasBought) {
+                if (isAdmin || book.hasPurchased) {
                   setSelectedBook(book);
                 } else {
                   return;
@@ -171,6 +173,9 @@ export default function BookList({
                   <BookAuthor
                     owner={book.performedBy}
                     bookContract={bookContract}
+                    account={account}
+                    username={username}
+                    setUserName={setUserName}
                   />{" "}
                   | 💰
                   <u>
@@ -192,8 +197,8 @@ export default function BookList({
                       label = "Borrowed";
                       variant = "warning";
                     }
-                  } else if (book.hasBought) {
-                    label = "Đã mua";
+                  } else if (book.hasPurchased) {
+                    label = "Purchased";
                     variant = "info";
                   } else if (hasBorrowed(book)) {
                     label = "Borrowed";
@@ -234,10 +239,7 @@ export default function BookList({
                 />
               </div>
               <div>
-                {(userRole !== "user" ||
-                  (book.borrows || []).some(
-                    (b) => b.borrower.toLowerCase() === account.toLowerCase()
-                  )) && (
+                {isAdmin && (
                   <>
                     <div></div>
                     <Button
@@ -256,24 +258,18 @@ export default function BookList({
               </div>
 
               {/* Các nút thao tác */}
-              {userRole === "user" &&
+              {!isAdmin &&
                 (hasBorrowed(book) ? (
                   <>
                     <Button
                       className="mt-2"
-                      onClick={() => handleReturn(book.id)}
+                      variant="info"
+                      onClick={() => setSelectedBook(book)}
                     >
-                      🔄 Trả sách
+                      📚 Chi tiết
                     </Button>
-                    <p className="mt-1">
-                      📅 Hết hạn:{" "}
-                      {book.borrows.find(
-                        (b) =>
-                          b.borrower.toLowerCase() === account.toLowerCase()
-                      )?.returnDate || 0}
-                    </p>
                   </>
-                ) : book.hasBought ? (
+                ) : book.hasPurchased ? (
                   <Button
                     className="mt-2"
                     variant="info"
@@ -413,6 +409,7 @@ export default function BookList({
         <BookDetailPopup
           book={selectedBook}
           bookContract={bookContract}
+          account={account}
           onClose={() => setSelectedBook(null)}
           hasBorrowed={hasBorrowed}
           hasBought={hasBought}
@@ -429,6 +426,7 @@ export default function BookList({
           }}
           handleRevokeUser={handleRevoke}
           setSelectedBook={setSelectedBook}
+          handleReturn={handleReturn}
         />
       )}
     </>

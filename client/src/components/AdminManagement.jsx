@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from "react";
-import Web3 from "web3";
 import AddBook from "./AddBook";
 import { Form, Button, Alert, Card } from "react-bootstrap";
-
+import { checkRole } from "../services/checkRoleApi";
 export default function AdminManagement({
   bookContract,
   account,
@@ -13,37 +12,32 @@ export default function AdminManagement({
   isSuperAdmin,
   setIsSuperAdmin,
   loadBooks,
+  setCategories,
+  categories,
 }) {
   const [newAdmin, setNewAdmin] = useState("");
   const [status, setStatus] = useState("");
-  const ADMIN_ROLE = Web3.utils.keccak256("ADMIN_ROLE");
-  const DEFAULT_ADMIN_ROLE =
-    "0x0000000000000000000000000000000000000000000000000000000000000000";
 
-  // Kiểm tra quyền khi component được mount hoặc account thay đổi
   useEffect(() => {
     const checkRoles = async () => {
       try {
-        const hasAdminRole = await bookContract.methods
-          .hasRole(ADMIN_ROLE, account)
-          .call();
-        const hasSuperAdminRole = await bookContract.methods
-          .hasRole(DEFAULT_ADMIN_ROLE, account)
-          .call();
+        const res = await checkRole(account);
+        // console.log(res);
+        const { isAdmin, isSuperAdmin } = res;
 
-        setIsAdmin(hasAdminRole || hasSuperAdminRole);
-        setIsSuperAdmin(hasSuperAdminRole); // 👈 đặt riêng
+        setIsAdmin(isAdmin || isSuperAdmin);
+        setIsSuperAdmin(isSuperAdmin);
       } catch (err) {
-        console.error("Lỗi kiểm tra quyền:", err);
+        console.error("❌ Lỗi kiểm tra quyền từ backend:", err);
         setIsAdmin(false);
         setIsSuperAdmin(false);
       }
     };
 
-    if (bookContract && account) {
+    if (account) {
       checkRoles();
     }
-  }, [bookContract, account]);
+  }, [account]);
 
   const grantAdmin = async () => {
     try {
@@ -98,6 +92,8 @@ export default function AdminManagement({
         bookContract={bookContract}
         account={account}
         loadBooks={loadBooks}
+        setCategories={setCategories}
+        categories={categories}
       />
       {isSuperAdmin && (
         <Card className="p-4 mb-4 shadow">

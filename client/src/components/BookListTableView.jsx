@@ -21,7 +21,6 @@ export default function BookListTableView({
   handleRevoke,
   bookContract,
   hasBorrowed,
-  sortManage,
 }) {
   const [editingBook, setEditingBook] = useState(null); // sách đang sửa
   const [editForm, setEditForm] = useState({
@@ -75,7 +74,6 @@ export default function BookListTableView({
     const loadData = async () => {
       const cats = await loadCategories(); // load xong categories
       setCategories(cats);
-      await sortManage(); // gọi sau khi categories có rồi
     };
 
     loadData();

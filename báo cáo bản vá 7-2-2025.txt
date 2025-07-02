@@ -1,0 +1,24 @@
+1. Thêm trường category, description
+	+ sách có thể thêm được nhiều loại
+	+ category cho phép thêm, xóa
+2. Cấu trúc lại code
+	+ chia smartcontract ra để không bị quá tải
+	+ tạo backend (nodejs) theo cấu trúc MVC
+	+ viết api 
+		- lấy toàn bộ sách
+			+ trả thêm biến hasPurchased khi người dùng mua sách
+		- lấy toàn bộ loại sách
+		- sắp xếp, [tìm kiếm, phân loại (thuật toán tf-idf)]
+			+ sắp xếp, phân loại thêm vào localstorage vẫn giữ trạng thái sắp xếp khi load trang
+			+ bỏ stopword, tính trọng số từ đơn thấp
+		- upload ipfs 
+		- check quyền		
+	+ tạo thêm view (table (chỉ admin), card)
+		- đặt vào localstorage
+		- khi đổi tài khoản xóa localstorage
+3. Sửa lỗi vặt
+	+ ngăn chặn gọi nhiều request lên metamask khi trình duyệt đang bật
+	=> có thể mở trình duyệt trước khi deploy
+	+ sử dụng useRef để tránh load sách ở chức năng search khi load trang
+	
+	

@@ -3,7 +3,8 @@ import Web3 from "web3";
 
 export default function EventLogs({
   bookContract,
-  userRole,
+  isAdmin,
+  isSuperAdmin,
   account,
   contract,
 }) {
@@ -70,26 +71,21 @@ export default function EventLogs({
           const owner = log.returnValues.owner;
           const event = log.event;
           // console.log("🔍 Account:", account);
-          console.log("📦 Log:", log.returnValues.owner);
+          // console.log("📦 Log:", log.returnValues.owner);
 
           const isGrantOrRevoke =
             event === "AdminGranted" || event === "AdminRevoked";
 
           // Super admin thấy tất cả
-          if (userRole === "super") return true;
+          if (isSuperAdmin) return true;
 
           // Nếu là admin:
-          if (userRole === "admin") {
+          if (isAdmin) {
             // Nếu là log gán quyền thì ẩn khỏi admin
             if (isGrantOrRevoke) return false;
 
             // Admin thấy chính mình hoặc người dùng (không phải admin)
-            return (
-              performer === account ||
-              borrower === account ||
-              buyer ||
-              owner === account
-            );
+            return performer || borrower || buyer || owner === account;
           }
 
           // Nếu là user: chỉ thấy chính mình (performer hoặc borrower)
