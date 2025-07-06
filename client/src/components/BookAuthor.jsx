@@ -1,22 +1,25 @@
 import React, { useEffect, useState } from "react";
 
-function BookAuthor({ owner, bookContract }) {
+function BookAuthor({ owner, bookContract, account }) {
   const [author, setAuthor] = useState("");
 
   useEffect(() => {
     const fetchAuthor = async () => {
       try {
-        const name = await bookContract.methods.usernames(owner).call();
+        if (!account || !owner || !bookContract) return; // 👈 đảm bảo đủ điều kiện
+        const name = await bookContract.methods
+          .usernames(owner)
+          .call({ from: account });
         setAuthor(name);
       } catch (err) {
         console.error("Lỗi lấy tên tác giả:", err);
       }
     };
 
-    if (owner) fetchAuthor();
-  }, [owner, bookContract]);
+    fetchAuthor();
+  }, [owner, bookContract, account]);
 
-  return <> {author || "Không rõ"}</>;
+  return <>{author || "Không rõ"}</>;
 }
 
 export default BookAuthor;

@@ -666,6 +666,8 @@ function App() {
                 handleRevoke={handleRevoke}
                 hasBought={hasBought}
                 hasBorrowed={hasBorrowed}
+                setUsername={setUsername}
+                username={username}
                 isSuperAdmin={isSuperAdmin}
               />
             )}

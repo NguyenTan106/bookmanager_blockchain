@@ -68,7 +68,6 @@ export default function SetUserName({
       <Row className="justify-content-center">
         <Col xs={12} md={8} lg={6} className="text-center">
           <h5>👤 {currentUsername || "Chưa đặt"}</h5>
-
           <Form className="d-flex justify-content-center align-items-center mt-3">
             <Form.Group className="me-2 mb-0" controlId="usernameInput">
               <Form.Control

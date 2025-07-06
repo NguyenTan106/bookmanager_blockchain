@@ -21,6 +21,8 @@ export default function BookListTableView({
   handleRevoke,
   bookContract,
   hasBorrowed,
+  username,
+  setUserName,
   isSuperAdmin,
 }) {
   const [editingBook, setEditingBook] = useState(null); // sách đang sửa
@@ -196,6 +198,9 @@ export default function BookListTableView({
                   <BookAuthor
                     owner={book.performedBy}
                     bookContract={bookContract}
+                    account={account}
+                    username={username}
+                    setUserName={setUserName}
                   />
                 </td>
                 <td>{book.price}</td>
