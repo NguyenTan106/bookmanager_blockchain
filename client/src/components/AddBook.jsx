@@ -1,7 +1,8 @@
 import { uploadPDFToBackend, uploadImageToBackend } from "../services/ipfsAPI";
-import React, { useState, useRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Container, Button, Col, Form, Row } from "react-bootstrap";
 import UploadCoverImage from "./UploadCoverImage";
+import { predictCategory } from "../services/naiveBayesApi";
 import CategoryManager from "./CatetoriesMagager";
 export default function AddBook({
   form,
@@ -19,6 +20,18 @@ export default function AddBook({
   const fileImageRef = useRef(null);
   const [showCatModal, setShowCatModal] = useState(false);
 
+  useEffect(() => {
+    const delayDebounce = setTimeout(async () => {
+      if (form.title.trim() && form.description.trim()) {
+        let cat_pre = await predictCategory(form.title, form.description);
+        setForm({ ...form, category: cat_pre.predictedCategory });
+      } else {
+        setForm({ ...form, category: "" });
+      }
+    }, 500); // đợi 500ms sau khi người dùng ngừng gõ
+
+    return () => clearTimeout(delayDebounce); // cleanup để tránh spam call
+  }, [form.title, form.description]);
   const handleUploadAndAddBook = async () => {
     // console.log(form);
     if (
@@ -71,7 +84,7 @@ export default function AddBook({
       await bookContract.methods
         .addBook(
           form.title,
-          form.category.map((id) => Number(id)),
+          form.category,
           ipfsHash,
           imageIpfsHash,
           Number(form.price),
@@ -106,6 +119,7 @@ export default function AddBook({
       setUploading(false);
     }
   };
+
   return (
     <Container className="mb-4">
       <Row className="justify-content-center">
@@ -133,7 +147,7 @@ export default function AddBook({
               </Form.Group>
               <Form.Group className="mb-3">
                 <Form.Label>Thể loại</Form.Label>
-                <CategoryManager
+                {/* <CategoryManager
                   show={showCatModal}
                   onHide={() => setShowCatModal(false)}
                   value={form.category}
@@ -152,7 +166,13 @@ export default function AddBook({
                   onClick={() => setShowCatModal(true)}
                 >
                   📚 Quản lý thể loại
-                </Button>
+                </Button> */}
+                <Form.Control
+                  placeholder="Kết quả thể loại"
+                  value={form.category}
+                  readOnly
+                  className="mb-2"
+                />
               </Form.Group>
 
               <Form.Group className="mb-3">

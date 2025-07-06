@@ -101,6 +101,7 @@ export default function BookDetailPopup({
               <BookAuthor
                 owner={book.performedBy}
                 bookContract={bookContract}
+                account={account}
               />
             </>
           )}
@@ -110,6 +111,7 @@ export default function BookDetailPopup({
               <BookAuthor
                 owner={book.performedBy}
                 bookContract={bookContract}
+                account={account}
               />
             </>
           )}
@@ -121,11 +123,9 @@ export default function BookDetailPopup({
         </p>
         <p>
           <strong>Loại sách:</strong>{" "}
-          {book.category?.map((cat, idx) => (
-            <Badge bg="secondary" className="me-1" key={idx}>
-              {cat.name}
-            </Badge>
-          ))}
+          <Badge bg="secondary" className="me-1">
+            {book.category}
+          </Badge>
           {/* {book.category.map((cat) => cat.name).join(", ")} */}
         </p>
         {isAdmin ||

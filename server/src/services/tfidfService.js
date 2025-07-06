@@ -59,13 +59,7 @@ const computeTfIdf = async (query, documents) => {
     //       doc.category.map((cat) => cat.name).join(", ")
     //   )
     // );
-    return tokenize(
-      doc.description +
-        " " +
-        doc.title +
-        " " +
-        doc.category.map((cat) => cat.name).join(", ")
-    );
+    return tokenize(doc.description + " " + doc.title + " " + doc.category);
   });
 
   // B2: Đếm df (document frequency)

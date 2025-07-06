@@ -1,0 +1,135 @@
+[
+    {
+      "id": 1,
+      "title": "Nhà Giả Kim",
+      "description": "Hành trình chăn cừu của Santiago trong cuộc tìm kiếm kho báu – một câu chuyện triết lý về định mệnh và ước mơ.",
+      "category": "Triết lý / Văn học"
+    },
+    {
+      "id": 2,
+      "title": "Đắc Nhân Tâm",
+      "description": "Nguyên tắc giao tiếp và ứng xử để chinh phục và ảnh hưởng người khác, kinh điển của kĩ năng mềm.",
+      "category": "Kỹ năng mềm"
+    },
+    {
+      "id": 3,
+      "title": "Cách nghĩ để thành công",
+      "description": "Tư duy làm giàu, thành quả từ nghiên cứu 500 người thành đạt.",
+      "category": "Phát triển bản thân"
+    },
+    {
+      "id": 4,
+      "title": "Quẳng gánh lo đi và vui sống",
+      "description": "Lời khuyên thiết thực để vượt qua lo âu, sống tích cực hơn.",
+      "category": "Phát triển bản thân"
+    },
+    {
+      "id": 5,
+      "title": "Đọc vị bất kỳ ai",
+      "description": "Kỹ năng nắm bắt tâm lý người khác qua hành vi và lời nói.",
+      "category": "Tâm lý ứng dụng"
+    },
+    {
+      "id": 6,
+      "title": "Bố Già",
+      "description": "Câu chuyện về gia đình mafia Corleone, cốt truyện sâu sắc về quyền lực và tình thân.",
+      "category": "Tiểu thuyết / Huyền thoại"
+    },
+    {
+      "id": 7,
+      "title": "Cuộc sống không giới hạn",
+      "description": "Hành trình đầy nghị lực của một chàng trai khuyết tật, truyền cảm hứng sống.",
+      "category": "Truyện truyền cảm hứng"
+    },
+    {
+      "id": 8,
+      "title": "Người giàu có nhất thành Babylon",
+      "description": "Các bài học tài chính cổ điển qua truyện châm biếm Babylon cổ.",
+      "category": "Tài chính cá nhân"
+    },
+    {
+      "id": 9,
+      "title": "7 Thói quen của người thành đạt",
+      "description": "Sơ đồ phát triển bản thân toàn diện qua 7 thói quen tích cực.",
+      "category": "Phát triển bản thân"
+    },
+    {
+      "id": 10,
+      "title": "Hạt giống tâm hồn",
+      "description": "Tuyển tập các câu chuyện ý nghĩa nhân văn, truyền cảm hứng tâm hồn.",
+      "category": "Văn học / Truyện đời thường"
+    },
+    {
+      "id": 11,
+      "title": "Ông già và biển cả",
+      "description": "Cuộc chiến giữa lão ngư và cá marlin – tác phẩm mang đầy triết lý và nghị lực.",
+      "category": "Văn học cổ điển"
+    },
+    {
+      "id": 12,
+      "title": "Giết con chim nhại",
+      "description": "Về công lý và lớn lên ở miền Nam Hoa Kỳ qua góc nhìn trẻ em.",
+      "category": "Văn học Mỹ / Xã hội"
+    },
+    {
+      "id": 13,
+      "title": "1984",
+      "description": "Xã hội kiểm soát tối đa, ngôn ngữ và tư tưởng bị thao túng – tiểu thuyết chấn động.",
+      "category": "Dystopia / Chính trị"
+    },
+    {
+      "id": 14,
+      "title": "The Book Thief",
+      "description": "Lịch sử Đức Quốc xã qua góc nhìn bé gái, kết hợp với cái chết như nhân vật kể chuyện.",
+      "category": "Lịch sử / Văn học YA"
+    },
+    {
+      "id": 15,
+      "title": "Pride and Prejudice",
+      "description": "Chuyện tình Elizabeth Bennet và ông Darcy, đầy những mâu thuẫn văn hoá và xã hội.",
+      "category": "Tiểu thuyết cổ điển"
+    },
+    {
+      "id": 16,
+      "title": "Animal Farm",
+      "description": "Truyện tương phản quyền lực bằng hình ảnh trang trại – lời ẩn dụ chua chát về chính trị.",
+      "category": "Châm biếm chính trị"
+    },
+    {
+      "id": 17,
+      "title": "Harry Potter and the Sorcerer’s Stone",
+      "description": "Bắt đầu cuộc phiêu lưu của cậu bé phù thủy Hogwarts – mở ra cả thế giới phép thuật.",
+      "category": "Fantasy / Trẻ em"
+    },
+    {
+      "id": 18,
+      "title": "Do Androids Dream of Electric Sheep?",
+      "description": "Câu hỏi về nhân tính và hiện thực trong tương lai hậu tận thế.",
+      "category": "Sci‑fi / Triết lý"
+    },
+    {
+      "id": 19,
+      "title": "The Hitchhiker’s Guide to the Galaxy",
+      "description": "Hài hước siêu thực xuyên vũ trụ với tấm vé thông hành bí ẩn.",
+      "category": "Sci‑fi hài"
+    },
+    {
+      "id": 20,
+      "title": "Alice’s Adventures in Wonderland",
+      "description": "Cuộc phiêu lưu thần tiên kỳ thú qua lỗ thỏ – mở ra thế giới đầy ẩn dụ và logic nghịch đảo.",
+      "category": "Cổ tích / Fantasy"
+    },
+    {
+      "id": 21,
+      "title": "Totto-chan bên cửa sổ",
+      "description": "Câu chuyện cảm động về cô bé Totto-chan và ngôi trường kỳ lạ Tomoe - nơi giáo dục bằng tình yêu và sự tôn trọng.",
+      "category": "Giáo dục / Tự truyện"
+    },
+    {
+      "id": 22,
+      "title": "Chủ nghĩa xã hội khoa học",
+      "description": "Tài liệu trình bày nền tảng lý luận của chủ nghĩa xã hội từ góc nhìn khoa học và lịch sử, thuộc hệ tư tưởng Mác – Lênin.",
+      "category": "Triết học / Chính trị học"
+    }
+  ]
+  

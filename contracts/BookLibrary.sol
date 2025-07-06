@@ -18,7 +18,7 @@ contract BookLibrary is AdminManager, UsernameManager {
         address owner;
         uint price;
         string description; // Thêm mô tả
-        uint[] categoryIds;
+        string category;
         string ipfsHash;
         string coverImageHash;
         BookStatus status;
@@ -31,19 +31,19 @@ contract BookLibrary is AdminManager, UsernameManager {
     mapping(uint => Book) public books;
     mapping(string => bool) internal usedTitles;
 
-    event BookAdded(uint id, string title, uint[] categoryIds, string ipfsHash, uint price, address owner);
-    event BookEdited(uint indexed id, string title, uint price, uint[] categoryIds, address performedBy);
+    event BookAdded(uint id, string title, string category, string ipfsHash, uint price, address owner);
+    event BookEdited(uint indexed id, string title, uint price, string category, address performedBy);
     event BookDeleted(uint indexed id, address performedBy);
 
     // -------- Book Management --------
-    function addBook(string memory _title, uint[] memory _categoryIds, string memory _ipfsHash, string memory _coverImageHash, uint _price, string memory _description) public onlyAdmin {
+    function addBook(string memory _title, string memory _category, string memory _ipfsHash, string memory _coverImageHash, uint _price, string memory _description) public onlyAdmin {
         require(!usedTitles[_title], "Book title already exists");
         require(bytes(usernames[msg.sender]).length > 0, "You must set your username first");
 
         Book storage newBook = books[nextId];
         newBook.id = nextId;
         newBook.title = _title;
-        newBook.categoryIds = _categoryIds; // Lưu thể loại sách
+        newBook.category = _category; // Lưu thể loại sách
         newBook.ipfsHash = _ipfsHash;
         newBook.coverImageHash = _coverImageHash;
         newBook.price = _price;
@@ -54,11 +54,11 @@ contract BookLibrary is AdminManager, UsernameManager {
         newBook.performedBy = msg.sender;
         usedTitles[_title] = true;
 
-        emit BookAdded(nextId, _title, _categoryIds, _ipfsHash, _price, msg.sender); // bỏ author string
+        emit BookAdded(nextId, _title, _category, _ipfsHash, _price, msg.sender); // bỏ author string
         nextId++;
     }
 
-    function editBook(uint _id, string memory _title, uint[] memory _categoryIds, string memory _ipfsHash, string memory _coverImageHash, uint _price, string memory _description) public onlyAdmin {
+    function editBook(uint _id, string memory _title, string memory _category, string memory _ipfsHash, string memory _coverImageHash, uint _price, string memory _description) public onlyAdmin {
             require(_id < nextId, "Book does not exist");
 
             Book storage book = books[_id];
@@ -81,9 +81,9 @@ contract BookLibrary is AdminManager, UsernameManager {
             book.coverImageHash = _coverImageHash;
             book.ipfsHash = _ipfsHash;
             book.description = _description; // Cập nhật mô tả sách
-            book.categoryIds = _categoryIds; // Cập nhật thể loại sách
+            book.category = _category; // Cập nhật thể loại sách
 
-            emit BookEdited(_id, book.title, book.price, book.categoryIds , msg.sender);
+            emit BookEdited(_id, book.title, book.price, book.category , msg.sender);
         }
 
     function isTitleUsed(string memory _title) public view returns (bool) {

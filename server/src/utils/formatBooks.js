@@ -22,7 +22,7 @@ const getCategories = async () => {
 };
 
 const formatBooksWithUser = async (books, userAddress) => {
-  const categories = await getCategories();
+  // const categories = await getCategories();
 
   return await Promise.all(
     books
@@ -47,13 +47,14 @@ const formatBooksWithUser = async (books, userAddress) => {
           owner: book.owner,
           price: Number(book.price),
           description: book.description,
-          category: book.categoryIds
-            .map((id) => {
-              const name = categories.get(Number(id));
-              if (!name) return null;
-              return { id: Number(id), name };
-            })
-            .filter(Boolean),
+          // category: book.categoryIds
+          //   .map((id) => {
+          //     const name = categories.get(Number(id));
+          //     if (!name) return null;
+          //     return { id: Number(id), name };
+          //   })
+          //   .filter(Boolean),
+          category: book.category,
           ipfsHash: book.ipfsHash,
           coverImageHash: book.coverImageHash,
           status: STATUS_MAP[Number(book.status)],

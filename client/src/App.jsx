@@ -21,6 +21,7 @@ import {
 } from "react-bootstrap";
 import { uploadImageToBackend, uploadPDFToBackend } from "./services/ipfsAPI"; // Import các hàm upload từ backend
 import { fetchBooks } from "./services/bookApi"; // Import hàm lấy sách từ API
+import TestApi from "./components/TestApi";
 import BookListTableView from "./components/BookListTableView";
 import { sortBooks } from "./services/bookApi";
 import { FaTable, FaThLarge, FaUndo } from "react-icons/fa";
@@ -267,10 +268,7 @@ function App() {
     imageFile
   ) => {
     console.log("🔧 Bắt đầu cập nhật sách...");
-    console.log(
-      "🔍 form.category:",
-      form.category.map((cat) => cat.id)
-    );
+    console.log("🔍 form.category:", form.category);
     try {
       // 1. Kiểm tra quyền
       if (owner.toLowerCase() !== account.toLowerCase() && !isSuperAdmin) {
@@ -308,7 +306,7 @@ function App() {
         .editBook(
           bookId,
           form.title,
-          form.category.map((cat) => cat.id),
+          form.category,
           ipfsHash,
           imageIpfsHash,
           Number(form.price),
@@ -320,7 +318,7 @@ function App() {
         .editBook(
           bookId,
           form.title,
-          form.category.map((cat) => cat.id),
+          form.category,
           ipfsHash,
           imageIpfsHash,
           Number(form.price),
@@ -420,6 +418,8 @@ function App() {
 
   return (
     <Container className="mt-4">
+      <TestApi books={books} />
+
       <Row className="justify-content-center">
         <Col className="text-center">
           <h2 className="">📚 BookChain Manager</h2>

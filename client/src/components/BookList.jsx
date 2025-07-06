@@ -78,14 +78,14 @@ export default function BookList({
     // console.log(book.categoryIds);
     setEditForm({
       title: book.title,
-      category: book.category || [], // thêm category nếu có
+      category: book.category, // thêm category nếu có
       price: book.price,
       oldPdfHash: book.ipfsHash, // giữ lại file PDF cũ
       oldCoverHash: book.coverImageHash || "",
       description: book.description, // thêm mô tả nếu có
     });
     await loadCategories();
-    console.log(book.category);
+    // console.log(book.category);
   };
 
   const closePopup = () => {

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Form, Button } from "react-bootstrap";
 import Select from "react-select";
+import { predictCategory } from "../services/naiveBayesApi";
 export default function EditBookPopup({
   editForm,
   setEditForm,
@@ -18,6 +19,21 @@ export default function EditBookPopup({
       document.body.style.overflow = "auto";
     };
   }, []);
+  useEffect(() => {
+    const delayDebounce = setTimeout(async () => {
+      if (editForm.title.trim() && editForm.description.trim()) {
+        let cat_pre = await predictCategory(
+          editForm.title,
+          editForm.description
+        );
+        setEditForm({ ...editForm, category: cat_pre.predictedCategory });
+      } else {
+        setEditForm({ ...editForm, category: "" });
+      }
+    }, 500); // đợi 500ms sau khi người dùng ngừng gõ
+
+    return () => clearTimeout(delayDebounce); // cleanup để tránh spam call
+  }, [editForm.title, editForm.description]);
   return (
     <div
       style={{
@@ -61,7 +77,7 @@ export default function EditBookPopup({
         </Form.Group>
 
         <Form.Label>📚 Thể loại</Form.Label>
-        <Select
+        {/* <Select
           className="mb-3"
           isMulti={isMulti}
           options={categories} // [{ id, label, value }]
@@ -84,8 +100,15 @@ export default function EditBookPopup({
               zIndex: 9999,
             }),
           }}
-        />
-
+        /> */}
+        <Form.Group>
+          <Form.Control
+            placeholder="Kết quả thể loại"
+            value={editForm.category}
+            readOnly
+            className="mb-2"
+          />
+        </Form.Group>
         <Form.Group controlId="formPrice" className="mb-3">
           <Form.Label>💰 Giá (ETH)</Form.Label>
           <Form.Control

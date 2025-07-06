@@ -12,6 +12,7 @@ const {
   getCategories,
   deleteCategory,
 } = require("../controllers/categoryController");
+const { naiveBayes } = require("../controllers/naiveBayesController");
 const { checkRole } = require("../controllers/checkRoleController");
 const searchBooksService = router.post("/search", searchBooks);
 const classifyBooksService = router.post("/classify", classifyBooks);
@@ -26,7 +27,7 @@ const deleteCategoryService = router.delete(
 const getAllBooksService = router.get("/books", getTotalBooks);
 const sortBooksService = router.get("/books/sort", sortBooks);
 const checkRoleService = router.get("/check-role/:address", checkRole);
-
+const naiveBayesService = router.post("/predict", naiveBayes);
 module.exports = {
   searchBooksService,
   uploadPDFService,
@@ -38,4 +39,5 @@ module.exports = {
   sortBooksService,
   checkRoleService,
   classifyBooksService,
+  naiveBayesService,
 };

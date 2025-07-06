@@ -10,6 +10,7 @@ function BookAuthor({ owner, bookContract, account }) {
         const name = await bookContract.methods
           .usernames(owner)
           .call({ from: account });
+        console.log(name);
         setAuthor(name);
       } catch (err) {
         console.error("Lỗi lấy tên tác giả:", err);
@@ -19,7 +20,7 @@ function BookAuthor({ owner, bookContract, account }) {
     fetchAuthor();
   }, [owner, bookContract, account]);
 
-  return <>{author || "Không rõ"}</>;
+  return <>{" " + author || " Không rõ"}</>;
 }
 
 export default BookAuthor;

@@ -12,6 +12,7 @@ const {
   sortBooksService,
   checkRoleService,
   classifyBooksService,
+  naiveBayesService,
 } = require("./routes/api");
 const multer = require("multer");
 require("dotenv").config();
@@ -33,6 +34,7 @@ app.use("/", getAllBooksService);
 app.use("/", sortBooksService);
 app.use("/", checkRoleService);
 app.use("/", classifyBooksService);
+app.use("/", naiveBayesService);
 
 app.listen(PORT, () => {
   console.log(`TF-IDF backend running at http://localhost:${PORT}`);
