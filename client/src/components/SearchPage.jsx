@@ -53,7 +53,7 @@ export default function SearchPage({
         style={{
           display: "flex",
           alignItems: "center",
-          width: "350px",
+          width: "300px",
           border: "1px solid #ccc",
           borderRadius: "30px",
           padding: "0rem 1rem",

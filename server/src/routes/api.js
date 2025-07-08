@@ -14,30 +14,37 @@ const {
 } = require("../controllers/categoryController");
 const { naiveBayes } = require("../controllers/naiveBayesController");
 const { checkRole } = require("../controllers/checkRoleController");
+const { handleResponseApiBookFromGG } = require("../controllers/dataTraning");
+
 const searchBooksService = router.post("/search", searchBooks);
 const classifyBooksService = router.post("/classify", classifyBooks);
 const uploadPDFService = router.post("/upload/pdf", uploadPDF);
 const uploadImageService = router.post("/upload/image", uploadImage);
-const addCategoryService = router.post("/categories/add", addCategory);
+// const addCategoryService = router.post("/categories/add", addCategory);
 const getCategoriesService = router.get("/categories", getCategories);
-const deleteCategoryService = router.delete(
-  "/categories/delete/:id",
-  deleteCategory
-);
+// const deleteCategoryService = router.delete(
+//   "/categories/delete/:id",
+//   deleteCategory
+// );
 const getAllBooksService = router.get("/books", getTotalBooks);
 const sortBooksService = router.get("/books/sort", sortBooks);
 const checkRoleService = router.get("/check-role/:address", checkRole);
 const naiveBayesService = router.post("/predict", naiveBayes);
+const dataTraningService = router.get(
+  "/data-traning",
+  handleResponseApiBookFromGG
+);
 module.exports = {
   searchBooksService,
   uploadPDFService,
   uploadImageService,
-  addCategoryService,
+  // addCategoryService,
   getCategoriesService,
-  deleteCategoryService,
+  // deleteCategoryService,
   getAllBooksService,
   sortBooksService,
   checkRoleService,
   classifyBooksService,
   naiveBayesService,
+  dataTraningService,
 };

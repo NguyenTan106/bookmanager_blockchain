@@ -34,7 +34,7 @@ const classifyBooks = async (req, res) => {
     const total = await getTotalBooksData(userAddress);
     // ✅ Tính TF-IDF
     const tfidfResults = await computeTfIdfClassify(query, total);
-    // console.log(tfidfResults);
+    console.log(tfidfResults);
     const sorted = tfidfResults.sort((a, b) => b.score - a.score);
 
     res.json(sorted);

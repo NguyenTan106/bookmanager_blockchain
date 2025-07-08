@@ -103,7 +103,6 @@ export default function BookList({
       editForm.title === editingBook.title &&
       editForm.price === editingBook.price &&
       editForm.description === editingBook.description &&
-      editForm.category === editingBook.category &&
       !pdfFile &&
       !imageFile;
 

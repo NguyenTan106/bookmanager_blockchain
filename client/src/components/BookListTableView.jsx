@@ -190,7 +190,7 @@ export default function BookListTableView({
                 <td>
                   {book.category?.map((cat, idx) => (
                     <Badge bg="secondary" className="me-1" key={idx}>
-                      {cat.name}
+                      {cat}
                     </Badge>
                   ))}
                 </td>

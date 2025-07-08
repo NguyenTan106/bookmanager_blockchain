@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fetch Books</title>
+</head>
+
+<body>
+  <div id="content"></div>
+</body>
+
+<script>
+  const keyword = [
+    "kỹ năng",
+    "lập trình",
+    "việt nam",
+    "kinh tế",
+    "tâm lý",
+    "tiếng việt",
+  ]; // 🔁 có thể thay đổi bằng input, v.v.
+
+  function handleResponse(response) {
+    // console.log(response);
+    for (let i = 0; i < response.items.length; i++) {
+      const item = response.items[i];
+      //   console.log({
+      //     title: item.volumeInfo.title,
+      //     description: item.volumeInfo.description,
+      //     category: item.volumeInfo.categories,
+      //   });
+      console.log(item)
+      const title = item.volumeInfo.title;
+      const description = item.volumeInfo.description;
+      const subtitle = item.volumeInfo.subtitle || ""; // Có thể không có subtitle
+      const category = item.volumeInfo.categories;
+      if (!description || !category) {
+        continue; // Bỏ qua nếu không có mô tả
+      }
+      document.getElementById("content").innerHTML += `<hr> Title:${title}
+        <br> Subtitle: ${subtitle}
+        <br> Description: ${description} 
+        <br> category: ${category}`;
+    }
+  }
+
+  const script = document.createElement("script");
+  script.src = `https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(
+    keyword
+  )}&startIndex=0&maxResults=20&callback=handleResponse`;
+  document.body.appendChild(script);
+</script>
+
+</script>
+
+</html>

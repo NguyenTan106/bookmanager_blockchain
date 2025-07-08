@@ -18,7 +18,7 @@ contract BookLibrary is AdminManager, UsernameManager {
         address owner;
         uint price;
         string description; // Thêm mô tả
-        string category;
+        string[] category;
         string ipfsHash;
         string coverImageHash;
         BookStatus status;
@@ -31,12 +31,12 @@ contract BookLibrary is AdminManager, UsernameManager {
     mapping(uint => Book) public books;
     mapping(string => bool) internal usedTitles;
 
-    event BookAdded(uint id, string title, string category, string ipfsHash, uint price, address owner);
-    event BookEdited(uint indexed id, string title, uint price, string category, address performedBy);
+    event BookAdded(uint id, string title, string[] category, string ipfsHash, uint price, address owner);
+    event BookEdited(uint indexed id, string title, uint price, string[] category, address performedBy);
     event BookDeleted(uint indexed id, address performedBy);
 
     // -------- Book Management --------
-    function addBook(string memory _title, string memory _category, string memory _ipfsHash, string memory _coverImageHash, uint _price, string memory _description) public onlyAdmin {
+    function addBook(string memory _title, string[] memory _category, string memory _ipfsHash, string memory _coverImageHash, uint _price, string memory _description) public onlyAdmin {
         require(!usedTitles[_title], "Book title already exists");
         require(bytes(usernames[msg.sender]).length > 0, "You must set your username first");
 
@@ -58,7 +58,7 @@ contract BookLibrary is AdminManager, UsernameManager {
         nextId++;
     }
 
-    function editBook(uint _id, string memory _title, string memory _category, string memory _ipfsHash, string memory _coverImageHash, uint _price, string memory _description) public onlyAdmin {
+    function editBook(uint _id, string memory _title, string[] memory _category, string memory _ipfsHash, string memory _coverImageHash, uint _price, string memory _description) public onlyAdmin {
             require(_id < nextId, "Book does not exist");
 
             Book storage book = books[_id];

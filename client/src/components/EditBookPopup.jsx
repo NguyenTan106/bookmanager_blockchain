@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Form, Button } from "react-bootstrap";
+import { Form, Button, Badge } from "react-bootstrap";
 import Select from "react-select";
 import { predictCategory } from "../services/naiveBayesApi";
 export default function EditBookPopup({
@@ -26,7 +26,10 @@ export default function EditBookPopup({
           editForm.title,
           editForm.description
         );
-        setEditForm({ ...editForm, category: cat_pre.predictedCategory });
+        setEditForm({
+          ...editForm,
+          category: cat_pre.top3.map((cat) => cat.category),
+        });
       } else {
         setEditForm({ ...editForm, category: "" });
       }
@@ -102,12 +105,19 @@ export default function EditBookPopup({
           }}
         /> */}
         <Form.Group>
-          <Form.Control
+          {/* <Form.Control
             placeholder="Kết quả thể loại"
             value={editForm.category}
             readOnly
             className="mb-2"
-          />
+          /> */}
+          {editForm.category &&
+            Array.isArray(editForm.category) &&
+            editForm.category.map((cat, idx) => (
+              <Badge bg="secondary" className="me-1" key={idx}>
+                {cat}
+              </Badge>
+            ))}
         </Form.Group>
         <Form.Group controlId="formPrice" className="mb-3">
           <Form.Label>💰 Giá (ETH)</Form.Label>

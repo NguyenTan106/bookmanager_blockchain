@@ -2,7 +2,7 @@ import React, { useEffect, useState, useRef } from "react";
 import Web3 from "web3";
 import BookManager from "./build/contracts/BookManager.json";
 import "./App.css";
-
+import { fetchCategories } from "./services/categoryApi"; // Import hàm lấy thể loại từ API
 import AdminManagement from "./components/AdminManagement";
 import BookList from "./components/BookList";
 import SearchPage from "./components/SearchPage";
@@ -79,6 +79,7 @@ function App() {
   //   checkRole();
   // }, [bookContract, account]);
   useEffect(() => {
+    handleLoadCategory();
     const delayLoadBooks = async () => {
       // Delay nhỏ (500ms - 2s) để node kịp cập nhật contract
       await new Promise((resolve) => setTimeout(resolve, 1000));
@@ -188,6 +189,16 @@ function App() {
     } catch (error) {
       console.error("❌ Lỗi khi tải sách:", error);
       return [];
+    }
+  };
+
+  const handleLoadCategory = async () => {
+    try {
+      const categories = await fetchCategories();
+      setCategories(categories);
+    } catch (error) {
+      console.error("❌ Lỗi khi tải thể loại:", error);
+      alert("Không thể tải thể loại. Vui lòng thử lại sau.");
     }
   };
 
@@ -416,9 +427,14 @@ function App() {
     setBooks(classify);
   };
 
+  const capitalizeFirstLetter = (str) => {
+    if (!str) return "";
+    return str.charAt(0).toUpperCase() + str.slice(1);
+  };
+
   return (
     <Container className="mt-4">
-      <TestApi books={books} />
+      {/* <TestApi books={books} /> */}
 
       <Row className="justify-content-center">
         <Col className="text-center">
@@ -538,7 +554,7 @@ function App() {
                   </Dropdown.Item>
                 </DropdownButton>
               </Col>
-              <Col sm="auto" className="" style={{ textAlign: "right" }}>
+              <Col sm="auto" className="p-0" style={{ textAlign: "right" }}>
                 <DropdownButton
                   className=""
                   id="dropdown-basic-button"
@@ -555,32 +571,32 @@ function App() {
                     <FaUndo className="me-2" /> {/* Icon undo */}
                     Ban đầu
                   </Dropdown.Item>
-                  {categories.map((cat) => (
-                    <Dropdown.Item
-                      key={cat.id}
-                      onClick={() => {
-                        const hasBooks = books.some((book) =>
-                          book.category?.some?.(
-                            (c) => c === cat.value || c.name === cat.value
-                          )
-                        );
+                  {categories &&
+                    Array.isArray(categories) &&
+                    categories.map((cat, idx) => (
+                      <Dropdown.Item
+                        key={idx}
+                        onClick={() => {
+                          const hasBooks = books.some((book) =>
+                            book.category?.some?.((c) => c === cat)
+                          );
 
-                        if (!hasBooks) {
-                          alert("Không có loại sách này");
-                          return;
-                        }
-                        setSelectedCategoryLabel(cat.label);
-                        handleClassify(cat.value, account);
-                      }}
-                      href="#/action-0"
-                    >
-                      {cat.label}
-                    </Dropdown.Item>
-                  ))}
+                          if (!hasBooks) {
+                            alert("Không có loại sách này");
+                            return;
+                          }
+                          setSelectedCategoryLabel(cat);
+                          handleClassify(cat, account);
+                        }}
+                        href="#/action-0"
+                      >
+                        {capitalizeFirstLetter(cat)}
+                      </Dropdown.Item>
+                    ))}
                 </DropdownButton>
               </Col>
               {isAdmin && (
-                <Col md="auto" className="p-0">
+                <Col md="auto" className="" style={{ paddingRight: 0 }}>
                   <Button
                     variant={
                       viewMode === "table" ? "dark" : "outline-secondary"

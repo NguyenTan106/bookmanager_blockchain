@@ -123,10 +123,11 @@ export default function BookDetailPopup({
         </p>
         <p>
           <strong>Loại sách:</strong>{" "}
-          <Badge bg="secondary" className="me-1">
-            {book.category}
-          </Badge>
-          {/* {book.category.map((cat) => cat.name).join(", ")} */}
+          {book.category.map((cat, idx) => (
+            <Badge bg="secondary" className="me-1" key={idx}>
+              {cat}
+            </Badge>
+          ))}
         </p>
         {isAdmin ||
           (book.hasPurchased && (

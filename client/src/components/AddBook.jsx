@@ -1,6 +1,6 @@
 import { uploadPDFToBackend, uploadImageToBackend } from "../services/ipfsAPI";
 import React, { useState, useEffect, useRef } from "react";
-import { Container, Button, Col, Form, Row } from "react-bootstrap";
+import { Container, Button, Col, Form, Row, Badge } from "react-bootstrap";
 import UploadCoverImage from "./UploadCoverImage";
 import { predictCategory } from "../services/naiveBayesApi";
 import CategoryManager from "./CatetoriesMagager";
@@ -24,7 +24,10 @@ export default function AddBook({
     const delayDebounce = setTimeout(async () => {
       if (form.title.trim() && form.description.trim()) {
         let cat_pre = await predictCategory(form.title, form.description);
-        setForm({ ...form, category: cat_pre.predictedCategory });
+        setForm({
+          ...form,
+          category: cat_pre.top3.map((cat) => cat.category),
+        });
       } else {
         setForm({ ...form, category: "" });
       }
@@ -84,7 +87,7 @@ export default function AddBook({
       await bookContract.methods
         .addBook(
           form.title,
-          form.category,
+          form.category.map((cat) => cat),
           ipfsHash,
           imageIpfsHash,
           Number(form.price),
@@ -146,7 +149,8 @@ export default function AddBook({
                 />
               </Form.Group>
               <Form.Group className="mb-3">
-                <Form.Label>Thể loại</Form.Label>
+                <Form.Label>📚Thể loại: </Form.Label>
+                <div></div>
                 {/* <CategoryManager
                   show={showCatModal}
                   onHide={() => setShowCatModal(false)}
@@ -167,12 +171,19 @@ export default function AddBook({
                 >
                   📚 Quản lý thể loại
                 </Button> */}
-                <Form.Control
+                {/* <Form.Control
                   placeholder="Kết quả thể loại"
                   value={form.category}
                   readOnly
                   className="mb-2"
-                />
+                /> */}
+                {form.category &&
+                  Array.isArray(form.category) &&
+                  form.category.map((cat, idx) => (
+                    <Badge bg="secondary" className="me-1" key={idx}>
+                      {cat}
+                    </Badge>
+                  ))}
               </Form.Group>
 
               <Form.Group className="mb-3">

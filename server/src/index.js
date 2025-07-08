@@ -5,14 +5,15 @@ const {
   searchBooksService,
   uploadPDFService,
   uploadImageService,
-  addCategoryService,
+  // addCategoryService,
   getCategoriesService,
-  deleteCategoryService,
+  // deleteCategoryService,
   getAllBooksService,
   sortBooksService,
   checkRoleService,
   classifyBooksService,
   naiveBayesService,
+  dataTraningService,
 } = require("./routes/api");
 const multer = require("multer");
 require("dotenv").config();
@@ -27,14 +28,15 @@ app.use(bodyParser.json());
 app.use("/", searchBooksService);
 app.use("/ipfs", upload.single("file"), uploadPDFService);
 app.use("/ipfs", upload.single("file"), uploadImageService);
-app.use("/", addCategoryService);
+// app.use("/", addCategoryService);
 app.use("/", getCategoriesService);
-app.use("/", deleteCategoryService);
+// app.use("/", deleteCategoryService);
 app.use("/", getAllBooksService);
 app.use("/", sortBooksService);
 app.use("/", checkRoleService);
 app.use("/", classifyBooksService);
 app.use("/", naiveBayesService);
+app.use("/", dataTraningService);
 
 app.listen(PORT, () => {
   console.log(`TF-IDF backend running at http://localhost:${PORT}`);
