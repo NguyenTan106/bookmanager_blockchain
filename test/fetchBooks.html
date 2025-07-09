@@ -13,14 +13,9 @@
 
 <script>
   const keyword = [
-    "kỹ năng",
-    "lập trình",
-    "việt nam",
-    "kinh tế",
-    "tâm lý",
-    "tiếng việt",
+     'Đắc nhân tâm'
   ]; // 🔁 có thể thay đổi bằng input, v.v.
-
+  let total = 0;
   function handleResponse(response) {
     // console.log(response);
     for (let i = 0; i < response.items.length; i++) {
@@ -32,17 +27,35 @@
       //   });
       console.log(item)
       const title = item.volumeInfo.title;
-      const description = item.volumeInfo.description;
+      const description = item.volumeInfo.description || "";
       const subtitle = item.volumeInfo.subtitle || ""; // Có thể không có subtitle
       const category = item.volumeInfo.categories;
-      if (!description || !category) {
+      const author = item.volumeInfo.authors ? item.volumeInfo.authors.join(", ") : "Unknown Author";
+      const pages = item.volumeInfo.pageCount || "Unknown Pages";
+      const publishedDate = item.volumeInfo.publishedDate || "Unknown Date";
+      const language = item.volumeInfo.language || "Unknown Language";
+      const imageLink = item.volumeInfo.imageLinks
+        ? item.volumeInfo.imageLinks.thumbnail || item.volumeInfo.imageLinks.smallThumbnail
+        : "No Image";
+      const hasDesOrSub = description || subtitle;
+      if (!hasDesOrSub || !category || imageLink == "No Image") {
         continue; // Bỏ qua nếu không có mô tả
       }
+      total++;
       document.getElementById("content").innerHTML += `<hr> Title:${title}
         <br> Subtitle: ${subtitle}
         <br> Description: ${description} 
-        <br> category: ${category}`;
+        <br> Category: ${category}
+        <br> Author: ${author}
+        <br> Published: ${publishedDate}
+        <br> Language: ${language}
+        <br> Image: 
+        <br>
+        <a href="${imageLink}" target="_blank"><img src="${imageLink}" alt="Book Image"</a>
+        <br> <a href="${imageLink}" target="_blank">Image Info</a>
+        <br> Pages: ${pages}`;
     }
+      console.log(total);
   }
 
   const script = document.createElement("script");

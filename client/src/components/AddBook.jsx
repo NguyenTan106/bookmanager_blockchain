@@ -190,7 +190,7 @@ export default function AddBook({
                 <Form.Label>✍️ Mô tả</Form.Label>
                 <Form.Control
                   as="textarea"
-                  rows={4}
+                  rows={6}
                   placeholder="Nhập mô tả chi tiết về sách..."
                   value={form.description}
                   onChange={(e) =>

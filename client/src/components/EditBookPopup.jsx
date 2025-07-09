@@ -59,7 +59,7 @@ export default function EditBookPopup({
           padding: "25px",
           borderRadius: "12px",
           width: "100%",
-          maxWidth: "400px",
+          maxWidth: "500px",
           boxShadow: "0 4px 12px rgba(0,0,0,0.2)",
           overflowY: "auto",
           maxHeight: "90vh",
@@ -134,7 +134,7 @@ export default function EditBookPopup({
           <Form.Label>✍️ Mô tả</Form.Label>
           <Form.Control
             as="textarea"
-            rows={4}
+            rows={6}
             placeholder="Nhập mô tả chi tiết về sách..."
             value={editForm.description}
             onChange={(e) =>
@@ -176,7 +176,7 @@ export default function EditBookPopup({
                 alt="Ảnh bìa"
                 style={{
                   width: "50%",
-                  maxHeight: "250px",
+                  maxHeight: "300px",
                   objectFit: "cover",
                   borderRadius: "8px",
                   boxShadow: "0 2px 8px rgba(0,0,0,0.1)",

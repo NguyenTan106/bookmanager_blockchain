@@ -129,6 +129,7 @@ export default function BookDetailPopup({
             </Badge>
           ))}
         </p>
+        {/* {console.log(book.category.map((cat) => cat))} */}
         {isAdmin ||
           (book.hasPurchased && (
             <>

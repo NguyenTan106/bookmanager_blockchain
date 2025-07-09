@@ -1,15 +1,32 @@
 const axios = require("axios");
 const fs = require("fs");
 const path = require("path");
+const { keywords } = require("./keywords");
 
-const OUTPUT_FILE = path.resolve(__dirname, "books.json");
+const OUTPUT_FILE = "./books.json";
 
-function isVietnamese(text) {
+// ⚠️ Kiểm tra lỗi font unicode thường gặp
+function hasBrokenFont(text) {
   if (!text) return false;
-  const vietnameseRegex = /[àáạảãâầấậẩẫăằắặẳẵêèéẹẻẽêềếệểễôồốộổỗơờớợởỡưừứựửữđ]/i;
-  return vietnameseRegex.test(text.toLowerCase());
+  const brokenRegex = /[¿�Ã¤¦¨¸«]/;
+  return brokenRegex.test(text);
 }
 
+// ⚠️ Kiểm tra sách có hợp lệ không
+function isValidBook(book) {
+  if (
+    !book.id ||
+    hasBrokenFont(book.title) ||
+    hasBrokenFont(book.subtitle) ||
+    hasBrokenFont(book.description) ||
+    hasBrokenFont(book.author)
+  ) {
+    return false;
+  }
+  return true;
+}
+
+// ✅ Hàm crawl theo từ khóa
 async function fetchBooksByKeyword(keyword, start = 0, max = 40) {
   const url = `https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(
     keyword
@@ -21,30 +38,52 @@ async function fetchBooksByKeyword(keyword, start = 0, max = 40) {
       res.data.items
         ?.map((item) => {
           const info = item.volumeInfo;
-          const hasDescription =
-            info.description && isVietnamese(info.description);
+          const hasDesOrSub = info.description || info.subtitle;
           const hasCategory =
             Array.isArray(info.categories) && info.categories.length > 0;
 
-          if (hasDescription && hasCategory) {
-            return {
-              id: `${(info.title || "").trim()}__${(info.description || "")
-                .trim()
-                .slice(0, 100)}`, // Dùng làm ID kiểm trùng
-              title: info.title || "",
-              subtitle: info.subtitle,
-              description: info.description,
-              category: info.categories.join(),
-            };
-          }
-          return null;
+          if (!hasDesOrSub || !hasCategory) return null;
+
+          const book = {
+            id: item.id,
+            title: info.title || "",
+            subtitle: info.subtitle || "",
+            description: info.description || "",
+            category: info.categories.map((c) => c.toLowerCase().trim()),
+            author: (info.authors || []).join(", "),
+            pages: info.pageCount || "",
+            publishedDate: info.publishedDate || "",
+            language: info.language || "",
+            imageLink:
+              info.imageLinks?.thumbnail ||
+              info.imageLinks?.smallThumbnail ||
+              "",
+          };
+
+          return isValidBook(book) ? normalizeBookFields(book) : null;
         })
         .filter(Boolean) || [];
+
     return books;
   } catch (err) {
     console.error("❌ Lỗi:", err.message);
     return [];
   }
+}
+
+function normalizeBookFields(book) {
+  return {
+    id: book.id || "",
+    title: book.title || "",
+    subtitle: book.subtitle || "",
+    description: book.description || "",
+    category: book.category || [],
+    author: book.author || "",
+    pages: book.pages || "",
+    publishedDate: book.publishedDate || "",
+    language: book.language || "",
+    imageLink: book.imageLink || "",
+  };
 }
 
 function loadExistingBooks() {
@@ -54,80 +93,148 @@ function loadExistingBooks() {
       return JSON.parse(raw);
     } catch (e) {
       console.error("⚠️ Lỗi đọc file JSON:", e.message);
-      return [];
+      return {};
     }
   }
-  return [];
+  return {};
 }
 
-async function fetchAllBooks(targetPerKeyword = 200) {
-  const keywords = [
-    "kỹ năng",
-    "lập trình",
-    "việt nam",
-    "kinh tế",
-    "tâm lý",
-    "tiếng việt",
-    "giáo dục",
-    "công nghệ",
-    "marketing",
-    "khởi nghiệp",
-    "trí tuệ nhân tạo",
-    "blockchain",
-    "lãnh đạo",
-    "giao tiếp",
-    "ngôn ngữ",
-    "phát triển bản thân",
-    "mac lenin",
-    "hồ chí minh",
-  ];
-
-  let allBooks = loadExistingBooks();
-  const seen = new Set(allBooks.map((b) => b.id));
+async function fetchBooksByCategory(minPerCategory = 10, maxPerCategory = 40) {
+  const existing = loadExistingBooks();
+  const categoryMap = existing;
+  const seen = new Set();
 
   for (const keyword of keywords) {
-    let keywordBooks = [];
     let page = 0;
 
-    while (keywordBooks.length < targetPerKeyword) {
+    while (page < 25) {
       const startIndex = page * 40;
-      if (startIndex >= 1000) break;
-
-      console.log(`🔍 Từ khóa: "${keyword}", trang ${page + 1}`);
+      console.log(
+        `🔍 Đang tìm sách với từ khóa "${keyword}" (trang ${page + 1})`
+      );
       const books = await fetchBooksByKeyword(keyword, startIndex, 40);
+      if (books.length === 0) break;
 
+      let addedCount = 0;
+
+      books.forEach((book) => {
+        if (seen.has(book.id)) return;
+        seen.add(book.id);
+
+        book.category.forEach((cat) => {
+          if (!categoryMap[cat]) categoryMap[cat] = [];
+
+          const existsInCategory = categoryMap[cat].some(
+            (b) => b.id.trim().toLowerCase() === book.id.trim().toLowerCase()
+          );
+
+          if (!existsInCategory && categoryMap[cat].length < maxPerCategory) {
+            categoryMap[cat].push(book);
+          }
+        });
+
+        addedCount++;
+      });
+
+      console.log(`📚 Đã thêm ${addedCount} sách mới từ "${keyword}"`);
+      page++;
+    }
+  }
+
+  // Tiếp tục crawl nếu thiếu sách
+  const missingCategories = Object.entries(categoryMap)
+    .filter(([_, books]) => books.length < minPerCategory)
+    .map(([cat]) => cat);
+
+  missingCategories.forEach((cat) => {
+    const currentCount = categoryMap[cat]?.length || 0;
+    const needed = minPerCategory - currentCount;
+    console.log(`📉 "${cat}": thiếu ${needed} sách (hiện có ${currentCount})`);
+  });
+
+  for (const missingCat of missingCategories) {
+    let page = 0;
+
+    while (true) {
+      const startIndex = page * 40;
+      console.log(
+        `🔍 Tiếp tục tìm sách cho category thiếu "${missingCat}" (trang ${
+          page + 1
+        })`
+      );
+      const books = await fetchBooksByKeyword(missingCat, startIndex, 40);
       if (books.length === 0) {
-        console.log("⛔ Hết kết quả.");
+        console.log(`⛔️ Hết kết quả cho "${missingCat}"`);
         break;
       }
 
-      // Lọc bỏ trùng trước khi thêm
-      const newBooks = books.filter((book) => !seen.has(book.id));
+      let added = 0;
 
-      newBooks.forEach((book) => {
-        seen.add(book.id);
-        keywordBooks.push(book);
-        allBooks.push(book);
+      books.forEach((book) => {
+        const normalizedId = book.id.trim().toLowerCase();
+        if (seen.has(normalizedId)) return;
+        seen.add(normalizedId);
+
+        if (book.category.includes(missingCat)) {
+          if (!categoryMap[missingCat]) categoryMap[missingCat] = [];
+
+          const existsInCategory = categoryMap[missingCat].some(
+            (b) => b.id.trim().toLowerCase() === normalizedId
+          );
+
+          if (
+            !existsInCategory &&
+            categoryMap[missingCat].length < maxPerCategory
+          ) {
+            categoryMap[missingCat].push(book);
+            added++;
+          }
+        }
       });
 
-      if (keywordBooks.length >= targetPerKeyword) break;
+      if (categoryMap[missingCat].length >= minPerCategory) {
+        console.log(`✅ Đã đủ sách cho category "${missingCat}"`);
+        break;
+      }
+
+      if (added === 0) {
+        console.log(`⚠️ Không có sách mới nào thêm cho "${missingCat}"`);
+        break;
+      }
+
       page++;
-    }
-
-    console.log(
-      `✅ Lấy ${keywordBooks.length} sách cho từ khóa "${keyword}" (Tổng cộng: ${allBooks.length})`
-    );
-
-    // 💾 Ghi vào file mỗi khi đủ 200 sách mới
-    if (keywordBooks.length >= 200) {
-      fs.writeFileSync(OUTPUT_FILE, JSON.stringify(allBooks, null, 2), "utf-8");
-      console.log(`💾 Đã ghi thêm vào ${OUTPUT_FILE}`);
     }
   }
 
-  // 🧹 Ghi đè toàn bộ nếu chưa đủ 200 ở vòng cuối
-  fs.writeFileSync(OUTPUT_FILE, JSON.stringify(allBooks, null, 2), "utf-8");
-  console.log(`🎉 Tổng số sách lưu trữ: ${allBooks.length}`);
+  // Lưu kết quả
+  const filteredCategoryMap = {};
+  Object.entries(categoryMap).forEach(([cat, books]) => {
+    if (books.length >= minPerCategory) {
+      filteredCategoryMap[cat] = books.slice(0, maxPerCategory);
+    }
+  });
+
+  fs.writeFileSync(
+    OUTPUT_FILE,
+    JSON.stringify(filteredCategoryMap, null, 2),
+    "utf-8"
+  );
+
+  console.log(
+    `🎉 Đã lưu ${
+      Object.keys(filteredCategoryMap).length
+    } thể loại vào ${OUTPUT_FILE}`
+  );
+
+  const totalBooks = Object.values(filteredCategoryMap).reduce(
+    (sum, arr) => sum + arr.length,
+    0
+  );
+  console.log(
+    `📁 Tổng cộng ${totalBooks} sách thuộc ${
+      Object.keys(filteredCategoryMap).length
+    } thể loại đã được ghi.`
+  );
 }
 
-fetchAllBooks(100); // 🎯 Tối đa 200 sách / từ khóa
+fetchBooksByCategory(5, 10);

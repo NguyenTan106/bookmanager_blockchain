@@ -60,7 +60,7 @@ const sample = require("../assets/sample.json");
 //   }
 // };
 
-// ✅ Lấy tất cả thể loại còn hoạt động (không bị xoá)
+// ✅ Lấy tất cả thể loại còn hoạt động (không bị xoá)                  
 const getCategories = async (req, res) => {
   try {
     const result = Object.keys(sample);
@@ -72,13 +72,5 @@ const getCategories = async (req, res) => {
     res.status(500).json({ error: "Không thể lấy danh sách thể loại" });
   }
 };
-// const categories = Object.keys(sample);
-// console.log(categories); // ['self-help', 'fiction', 'education', ...]
-const bookCounts = {};
-for (const category in sample) {
-  bookCounts[category] = sample[category].length;
-}
 
-console.log(bookCounts);
-console.log(`Tổng số thể loại: ${Object.keys(sample).length}`);
 module.exports = { getCategories };

@@ -98,9 +98,13 @@ export default function BookList({
       alert("Vui lòng nhập đầy đủ tiêu đề sách.");
       return;
     }
+    // console.log(editingBook.category);
+
     // ✅ So sánh các trường quan trọng
     const isUnchanged =
       editForm.title === editingBook.title &&
+      JSON.stringify(editForm.category) ===
+        JSON.stringify(editingBook.category) &&
       editForm.price === editingBook.price &&
       editForm.description === editingBook.description &&
       !pdfFile &&
@@ -167,7 +171,16 @@ export default function BookList({
               key={index}
             >
               <div>
-                <strong>{book.title}</strong>
+                <strong
+                  style={{
+                    display: "block",
+                    whiteSpace: "nowrap",
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                  }}
+                >
+                  {book.title}
+                </strong>
                 <div>
                   👤
                   <BookAuthor
