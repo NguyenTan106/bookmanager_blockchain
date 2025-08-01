@@ -58,26 +58,6 @@ function App() {
     loadBlockchain();
   }, []);
 
-  // useEffect(() => {
-  //   const checkRole = async () => {
-  //     if (bookContract && account) {
-  //       const role = await getUserRole(bookContract, account);
-  //       // console.log(role);
-  //       setUserRole(role); // set state
-  //       if (role === "user") {
-  //         const delayLoadBooks = async () => {
-  //           // Delay nhỏ (500ms - 2s) để node kịp cập nhật contract
-  //           await new Promise((resolve) => setTimeout(resolve, 700));
-  //           if (bookContract && account) {
-  //             await loadBooks(bookContract);
-  //           }
-  //         };
-  //         delayLoadBooks();
-  //       }
-  //     }
-  //   };
-  //   checkRole();
-  // }, [bookContract, account]);
   useEffect(() => {
     handleLoadCategory();
     const delayLoadBooks = async () => {

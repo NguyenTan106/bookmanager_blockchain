@@ -17,7 +17,7 @@ contract BookLibrary is AdminManager, UsernameManager {
         string title;
         address owner;
         uint price;
-        string description; // Thêm mô tả
+        string description;
         string[] category;
         string ipfsHash;
         string coverImageHash;
